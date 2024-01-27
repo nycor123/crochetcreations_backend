@@ -2,6 +2,7 @@ package com.andyestrada.crochetcreations.startuprunners;
 
 import com.andyestrada.crochetcreations.entities.Role;
 import com.andyestrada.crochetcreations.entities.User;
+import com.andyestrada.crochetcreations.repositories.ProductRepository;
 import com.andyestrada.crochetcreations.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -14,9 +15,11 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ProductRepository productRepository;
 
     @Override
     public void run(String... args) throws Exception {
+        // Create admin user
         User admin = User.builder()
                 .firstName("Admin")
                 .lastName("User")
@@ -25,7 +28,7 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
                 .role(Role.ADMIN)
                 .build();
         userRepository.save(admin);
-
+        // Create regular user
         User user = User.builder()
                 .firstName("Regular")
                 .lastName("User")
