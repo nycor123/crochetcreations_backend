@@ -7,6 +7,7 @@ import com.andyestrada.crochetcreations.services.authentication.AuthenticationSe
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         classes = CrochetCreationsApplication.class)
 @AutoConfigureMockMvc
-public class AuthenticationControllerUnitTest {
+public class AuthenticationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -43,7 +43,7 @@ public class AuthenticationControllerUnitTest {
         //given
         String jwtToken = "jwtTokenString";
         SignInRequestDto request = SignInRequestDto.builder().email("test@email.com").password("12345").build();
-        given(authenticationService.signin(request))
+        BDDMockito.given(authenticationService.signin(request))
                 .willReturn(JwtAuthenticationResponseDto.builder().token(jwtToken).build());
         //when
         ResultActions result = mockMvc.perform(post("/api/v1/auth/signin")
@@ -57,5 +57,4 @@ public class AuthenticationControllerUnitTest {
                 .andExpect(jsonPath("$.token", is(jwtToken)));
 
     }
-
 }
