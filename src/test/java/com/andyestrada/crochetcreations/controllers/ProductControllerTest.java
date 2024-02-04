@@ -3,18 +3,14 @@ package com.andyestrada.crochetcreations.controllers;
 import com.andyestrada.crochetcreations.CrochetCreationsApplication;
 import com.andyestrada.crochetcreations.dto.request.ProductDto;
 import com.andyestrada.crochetcreations.entities.Product;
-import com.andyestrada.crochetcreations.repositories.ProductRepository;
 import com.andyestrada.crochetcreations.services.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -22,13 +18,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         classes = CrochetCreationsApplication.class)
@@ -55,7 +49,6 @@ public class ProductControllerTest {
                     .name("Product_" + i)
                     .description("test description")
                     .images(imageUrls)
-                    .price(new BigDecimal("100.00"))
                     .build();
             productDtoList.add(productDto);
         }
@@ -87,16 +80,17 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void shouldSaveValidProduct() throws Exception {
+    public void shouldSaveValidNewProduct() throws Exception {
         //given
         ProductDto productDto = ProductDto.builder()
                 .name("Test_Product")
-                .price(new BigDecimal("1"))
+                .price(new BigDecimal("100"))
+                .listedForSale(true)
                 .build();
         List<ProductDto> productDtos = new ArrayList<>();
         productDtos.add(productDto);
         //when
-        ResultActions result = mockMvc.perform(post("/api/v1/products/save")
+        ResultActions result = mockMvc.perform(post("/api/v1/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(productDtos))
                 .characterEncoding("utf-8"));
@@ -108,13 +102,13 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void shouldNotSaveInvalidProduct() throws Exception {
+    public void shouldNotSaveInvalidNewProduct() throws Exception {
         //given
-        ProductDto productDto = ProductDto.builder().name("Test_Product").build();
+        ProductDto productDto = ProductDto.builder().description("test").build();
         List<ProductDto> productDtos = new ArrayList<>();
         productDtos.add(productDto);
         //when
-        ResultActions result = mockMvc.perform(post("/api/v1/products/save")
+        ResultActions result = mockMvc.perform(post("/api/v1/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(productDtos))
                 .characterEncoding("utf-8"));

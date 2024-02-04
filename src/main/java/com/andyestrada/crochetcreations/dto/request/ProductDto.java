@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 public class ProductDto {
     private String name;
     private String description;
-    private String[] images;
     private BigDecimal price;
+    private Boolean listedForSale;
+    private String[] images;
 }

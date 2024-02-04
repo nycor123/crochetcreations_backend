@@ -3,14 +3,13 @@ package com.andyestrada.crochetcreations.controllers;
 import com.andyestrada.crochetcreations.dto.request.ProductDto;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.services.ProductService;
-import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -31,9 +30,20 @@ public class ProductController {
         return productOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/save")
+    @PostMapping()
     public ResponseEntity<List<Product>> saveProducts(@RequestBody List<ProductDto> productDtoList) {
-        Optional<List<Product>> productsOptional = productService.saveAll(productDtoList);
-        return productsOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.badRequest().build());
+        try {
+            Optional<List<Product>> productsOptional = productService.saveAll(productDtoList);
+            return productsOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.badRequest().build());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(@PathVariable long id, @RequestBody ProductDto productDto) {
+        // TODO
+        return ResponseEntity.badRequest().build();
+    }
+
 }
