@@ -20,13 +20,13 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<Product>> getProducts() {
-        Optional<List<Product>> productsOptional = productService.getAll();
+        Optional<List<Product>> productsOptional = productService.findAll();
         return productsOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.ok(new ArrayList<>()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable long id) {
-        Optional<Product> productOptional = productService.getById(id);
+        Optional<Product> productOptional = productService.findById(id);
         return productOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -42,8 +42,12 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable long id, @RequestBody ProductDto productDto) {
-        // TODO
-        return ResponseEntity.badRequest().build();
+        try {
+            Optional<Product> productOptional = productService.updateProduct(id, productDto);
+            return productOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.badRequest().build());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
     }
 
 }

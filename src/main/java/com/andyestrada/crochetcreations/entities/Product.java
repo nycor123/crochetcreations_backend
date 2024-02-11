@@ -26,6 +26,7 @@ public class Product {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @ToString.Exclude
     private List<ProductPrice> prices;
 
     private String description;

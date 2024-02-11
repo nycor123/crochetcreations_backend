@@ -7,6 +7,8 @@ import com.andyestrada.crochetcreations.services.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,8 +20,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -111,6 +112,38 @@ public class ProductControllerTest {
         ResultActions result = mockMvc.perform(post("/api/v1/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(productDtos))
+                .characterEncoding("utf-8"));
+        //then
+        result.andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    public void shouldUpdateValidProduct() throws Exception {
+        //given
+        Product product = savedProducts.get(0);
+        BigDecimal newPriceAmount = new BigDecimal("100.01");
+        //when
+        ProductDto productDto = ProductDto.builder().price(newPriceAmount).listedForSale(true).build();
+        ResultActions result = mockMvc.perform(put("/api/v1/products/" + product.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(productDto))
+                .characterEncoding("utf-8"));
+        //then
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.effectivePrice.amount").value(newPriceAmount))
+                .andExpect(jsonPath("$.listedForSale").value(true));
+    }
+
+    @Test
+    public void shouldNotUpdateInvalidProduct() throws Exception {
+        //given
+        Product product = savedProducts.get(0);
+        //when
+        ProductDto productDto = ProductDto.builder().listedForSale(true).build();
+        ResultActions result = mockMvc.perform(put("/api/v1/products/" + product.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(productDto))
                 .characterEncoding("utf-8"));
         //then
         result.andExpect(status().is4xxClientError());
