@@ -26,7 +26,6 @@ public class ImageServiceImpl implements ImageService {
         try {
             Map<String, String> fileProperties = cloudinaryService.uploadFile(imageDto.getFile(), "crochetcreations");
             Image image = Image.builder()
-                    .name(imageDto.getName())
                     .remotePublicId(fileProperties.get("publicId"))
                     .url(fileProperties.get("url"))
                     .build();
@@ -62,9 +61,6 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private void validateImageDto(ImageDto imageDto) {
-        if (imageDto.getName() == null || imageDto.getName().isEmpty()) {
-            throw new IllegalStateException("Image name is required.");
-        }
         if (imageDto.getFile() == null || imageDto.getFile().isEmpty()) {
             throw new IllegalStateException("File is required.");
         }

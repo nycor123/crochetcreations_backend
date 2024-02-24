@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,39 +31,21 @@ public class ImageServiceTest {
                 "image/png",
                 IOUtils.toByteArray(input));
         ImageDto imageDto = ImageDto.builder()
-                .name("test_image")
                 .file(multipartFile)
                 .build();
         //when
         Image image = imageService.uploadImage(imageDto).get();
         //then
         assertNotNull(image.getId());
-        assertNotNull(image.getName());
         assertNotNull(image.getUrl());
         //cleanup
         imageService.deleteImageFromRemote(image);
     }
 
     @Test
-    public void cannotUploadImageWithoutName() {
-        //given
-        ImageDto imageDto = ImageDto.builder()
-                .file(null)
-                .build();
-        String expectedMessage = "Image name is required.";
-        //when
-        Exception exception = assertThrows(Exception.class, () -> imageService.uploadImage(imageDto));
-        //then
-        String actualMessage = exception.getMessage();
-        assertEquals(expectedMessage, actualMessage);
-    }
-
-    @Test
     public void cannotUploadImageWithoutFile() {
         //given
-        ImageDto imageDto = ImageDto.builder()
-                .name("test_image")
-                .build();
+        ImageDto imageDto = ImageDto.builder().build();
         String expectedMessage = "File is required.";
         //when
         Exception exception = assertThrows(Exception.class, () -> imageService.uploadImage(imageDto));
@@ -84,7 +65,6 @@ public class ImageServiceTest {
                 "image/png",
                 IOUtils.toByteArray(input));
         ImageDto imageDto = ImageDto.builder()
-                .name("test_image")
                 .file(multipartFile)
                 .build();
         Image image = imageService.uploadImage(imageDto).get();
