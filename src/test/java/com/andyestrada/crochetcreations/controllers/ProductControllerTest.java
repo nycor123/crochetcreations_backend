@@ -7,8 +7,6 @@ import com.andyestrada.crochetcreations.services.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,12 +42,10 @@ public class ProductControllerTest {
     @BeforeEach
     public void setup() {
         List<ProductDto> productDtoList = new ArrayList<>();
-        String[] imageUrls = {"link_1, link_2, link_3"};
         for (int i = 0; i < 3; i++) {
             ProductDto productDto = ProductDto.builder()
                     .name("Product_" + i)
                     .description("test description")
-                    .images(imageUrls)
                     .build();
             productDtoList.add(productDto);
         }
@@ -124,7 +120,7 @@ public class ProductControllerTest {
         BigDecimal newPriceAmount = new BigDecimal("100.01");
         //when
         ProductDto productDto = ProductDto.builder().price(newPriceAmount).listedForSale(true).build();
-        ResultActions result = mockMvc.perform(put("/api/v1/products/" + product.getId())
+        ResultActions result = mockMvc.perform(patch("/api/v1/products/" + product.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(productDto))
                 .characterEncoding("utf-8"));

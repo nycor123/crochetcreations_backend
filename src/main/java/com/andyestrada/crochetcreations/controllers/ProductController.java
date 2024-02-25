@@ -4,6 +4,7 @@ import com.andyestrada.crochetcreations.dto.request.ProductDto;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.services.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ProductController {
 
+    @Autowired
     private final ProductService productService;
 
     @GetMapping
@@ -40,7 +42,7 @@ public class ProductController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable long id, @RequestBody ProductDto productDto) {
         try {
             Optional<Product> productOptional = productService.updateProduct(id, productDto);

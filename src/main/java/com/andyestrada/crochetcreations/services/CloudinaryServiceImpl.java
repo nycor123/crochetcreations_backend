@@ -5,6 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CloudinaryServiceImpl implements CloudinaryService {
 
+    @Autowired
     private final Cloudinary cloudinary;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudinaryServiceImpl.class);
