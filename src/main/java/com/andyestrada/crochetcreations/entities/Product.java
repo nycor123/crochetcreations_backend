@@ -1,12 +1,11 @@
 package com.andyestrada.crochetcreations.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 
 @Data
 @Builder
@@ -22,9 +21,25 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
-    private String description;
-    private String[] images;
+    @Column(name = "listed_for_sale", nullable = false)
+    private Boolean listedForSale;
 
-    @Column(nullable = false)
-    private BigDecimal price;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private List<ProductPrice> prices;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private List<Image> images;
+
+    private String description;
+
+    public Optional<ProductPrice> getEffectivePrice() {
+        if (prices != null && prices.size() > 0) {
+            return prices.stream().filter(p -> p.getUntil() == null).findFirst();
+        }
+        return Optional.empty();
+    }
 }
