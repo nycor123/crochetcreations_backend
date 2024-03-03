@@ -34,6 +34,11 @@ public class Product {
     @ToString.Exclude
     private List<Image> images;
 
+    @JsonManagedReference
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private List<Item> stock;
+
     private String description;
 
     public Optional<ProductPrice> getEffectivePrice() {
