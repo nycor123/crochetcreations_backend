@@ -40,6 +40,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/products/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/images/**").hasAuthority(Role.ADMIN.toString())
+                        .requestMatchers("/api/v1/inventory/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/user/**").hasAuthority(Role.USER.toString())
                         .anyRequest().authenticated()
                 );
