@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -38,7 +39,9 @@ public class SecurityConfiguration {
                 .securityMatcher("/api/**")
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/products/**").hasAuthority(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasAuthority(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/products/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/images/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/inventory/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/user/**").hasAuthority(Role.USER.toString())
