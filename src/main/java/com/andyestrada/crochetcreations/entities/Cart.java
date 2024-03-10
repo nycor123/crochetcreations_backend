@@ -11,19 +11,18 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "ORDERS")
-public class Order {
+@Table(name = "CARTS")
+public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JsonManagedReference
-    @ToString.Exclude
-    @OneToMany(mappedBy = "order")
-    private List<Item> items;
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @JsonManagedReference
     @ToString.Exclude
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "cart")
     private List<CartItem> cartItems;
 }

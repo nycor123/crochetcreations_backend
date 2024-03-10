@@ -30,6 +30,9 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @OneToOne(mappedBy = "user")
+    private Cart cart;
+
     private String firstName;
     private String lastName;
     private String password;
