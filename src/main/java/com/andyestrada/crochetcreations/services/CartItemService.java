@@ -1,6 +1,6 @@
 package com.andyestrada.crochetcreations.services;
 
-import com.andyestrada.crochetcreations.dto.request.CartItemDto;
+import com.andyestrada.crochetcreations.dto.CartItemDto;
 import com.andyestrada.crochetcreations.entities.CartItem;
 
 import java.util.List;

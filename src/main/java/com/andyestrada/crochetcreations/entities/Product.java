@@ -39,7 +39,6 @@ public class Product {
     @ToString.Exclude
     private List<Item> stock;
 
-    @JsonManagedReference
     @ToString.Exclude
     @OneToMany(mappedBy = "product")
     private List<CartItem> cartItems;

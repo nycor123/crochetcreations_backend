@@ -1,8 +1,8 @@
 package com.andyestrada.crochetcreations.controllers;
 
 import com.andyestrada.crochetcreations.CrochetCreationsApplication;
-import com.andyestrada.crochetcreations.dto.request.CartItemDto;
-import com.andyestrada.crochetcreations.dto.request.ProductDto;
+import com.andyestrada.crochetcreations.dto.CartItemDto;
+import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.dto.request.SignInRequestDto;
 import com.andyestrada.crochetcreations.dto.request.UpdateStockDto;
 import com.andyestrada.crochetcreations.dto.response.JwtAuthenticationResponseDto;
@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         classes = CrochetCreationsApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc()
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class UserControllerTest {
     @Autowired
@@ -106,6 +107,8 @@ public class UserControllerTest {
             ProductDto productDto = ProductDto.builder()
                     .name("ICT_Product_" + i)
                     .description("test description")
+                    .price(new BigDecimal("1500"))
+                    .listedForSale(true)
                     .build();
             productDtoList.add(productDto);
         }
@@ -122,8 +125,8 @@ public class UserControllerTest {
                     .quantity(1)
                     .build();
             inventoryService.updateStock(updateStockDto);
-            CartItemDto cartItemDto = CartItemDto.builder()
-                    .cartId(user.getCart().getId())
+            com.andyestrada.crochetcreations.dto.CartItemDto cartItemDto = CartItemDto.builder()
+                    .id(user.getCart().getId())
                     .productId(product.getId())
                     .quantity(1)
                     .build();
@@ -136,7 +139,11 @@ public class UserControllerTest {
         //then
         result
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(cartItemsCountBefore + cartItemsCountAfter)));
+                .andExpect(jsonPath("$", hasSize(cartItemsCountBefore + cartItemsCountAfter)))
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].cart").exists())
+                .andExpect(jsonPath("$[0].product").exists())
+                .andExpect(jsonPath("$[0].quantity").exists());
     }
 
     @Test
@@ -150,12 +157,13 @@ public class UserControllerTest {
         inventoryService.updateStock(updateStockDto);
         int cartItemsCountBefore = cartService.getCartItemsForUser(user.getEmail()).orElse(new ArrayList<>()).size();
         //when
-        CartItemDto cartItemDto = CartItemDto.builder()
-                .cartId(user.getCart().getId())
+        com.andyestrada.crochetcreations.dto.CartItemDto cartItemDto = CartItemDto.builder()
+                .id(user.getCart().getId())
                 .productId(product.getId())
                 .quantity(3)
                 .build();
         ResultActions result = mockMvc.perform(post("/api/v1/user/cart/add")
+                .header("Authorization", "Bearer " + bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(cartItemDto))
                 .characterEncoding("utf-8"));
@@ -165,7 +173,7 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(cartItemsCountAfter)));
         String responseString = result.andReturn().getResponse().getContentAsString();
-        List<CartItem> cartItems = Arrays.asList(mapper.readValue(responseString, CartItem[].class));
+        List<CartItemDto> cartItems = Arrays.asList(mapper.readValue(responseString, CartItemDto[].class));
         boolean cartItemAdded = cartItems.stream().anyMatch(cartItem ->
                 cartItem.getProduct().getId().equals(cartItemDto.getProductId())
                     && cartItem.getQuantity().equals(cartItemDto.getQuantity()));

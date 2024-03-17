@@ -1,6 +1,6 @@
 package com.andyestrada.crochetcreations.services;
 
-import com.andyestrada.crochetcreations.dto.request.CartItemDto;
+import com.andyestrada.crochetcreations.dto.CartItemDto;
 import com.andyestrada.crochetcreations.entities.Cart;
 import com.andyestrada.crochetcreations.entities.CartItem;
 import com.andyestrada.crochetcreations.entities.Product;
@@ -30,7 +30,7 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     @Transactional
     public Optional<List<CartItem>> addCartItem(CartItemDto cartItemDto) {
-        Cart cart = cartRepository.findById(cartItemDto.getCartId()).orElseThrow();
+        Cart cart = cartRepository.findById(cartItemDto.getId()).orElseThrow();
         Product product = productService.findById(cartItemDto.getProductId()).orElseThrow();
         CartItem newCartItem = CartItem.builder()
                 .cart(cart)

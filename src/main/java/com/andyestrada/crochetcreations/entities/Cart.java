@@ -21,7 +21,6 @@ public class Cart {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @JsonManagedReference
     @ToString.Exclude
     @OneToMany(mappedBy = "cart")
     private List<CartItem> cartItems;

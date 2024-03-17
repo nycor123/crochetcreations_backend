@@ -22,7 +22,6 @@ public class Order {
     @OneToMany(mappedBy = "order")
     private List<Item> items;
 
-    @JsonManagedReference
     @ToString.Exclude
     @OneToMany(mappedBy = "order")
     private List<CartItem> cartItems;

@@ -1,6 +1,6 @@
 package com.andyestrada.crochetcreations.services;
 
-import com.andyestrada.crochetcreations.dto.request.ProductDto;
+import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.entities.Product;
 
 import java.util.List;
