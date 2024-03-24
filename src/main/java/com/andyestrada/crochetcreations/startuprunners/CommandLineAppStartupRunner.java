@@ -2,9 +2,9 @@ package com.andyestrada.crochetcreations.startuprunners;
 
 import com.andyestrada.crochetcreations.entities.Role;
 import com.andyestrada.crochetcreations.entities.User;
-import com.andyestrada.crochetcreations.repositories.ProductRepository;
 import com.andyestrada.crochetcreations.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -12,10 +12,11 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class CommandLineAppStartupRunner implements CommandLineRunner {
-
+    @Autowired
     private final UserRepository userRepository;
+
+    @Autowired
     private final PasswordEncoder passwordEncoder;
-    private final ProductRepository productRepository;
 
     @Override
     public void run(String... args) throws Exception {

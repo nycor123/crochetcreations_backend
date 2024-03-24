@@ -31,7 +31,7 @@ public class UserController {
     public ResponseEntity<List<CartItemDto>> getUserCart(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
         try {
             String username = jwtService.extractUsername(authHeader.substring(authHeaderBeginIndex));
-            Optional<List<CartItemDto>> cartItemDtoListOptional = cartService.getCartItemsForUser(username);
+            Optional<List<CartItemDto>> cartItemDtoListOptional = cartService.getCartItems(username);
             return cartItemDtoListOptional.map(ResponseEntity::ok).orElse(ResponseEntity.ok(new ArrayList<>()));
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
@@ -39,14 +39,39 @@ public class UserController {
     }
 
     @PostMapping("/cart/add")
-    public ResponseEntity<List<CartItemDto>> addToCart(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+    public ResponseEntity<CartItemDto> addToCart(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
                                                        @RequestBody CartItemDto cartItemDto) {
         try {
             String username = jwtService.extractUsername((authHeader.substring(authHeaderBeginIndex)));
-            Optional<List<CartItemDto>> cartItemsOptional = cartService.addCartItemForUser(username, cartItemDto);
-            return cartItemsOptional.map(ResponseEntity::ok).orElse(ResponseEntity.ok(new ArrayList<>()));
+            Optional<CartItemDto> cartItemOptional = cartService.addCartItem(username, cartItemDto);
+            return cartItemOptional.map(ResponseEntity::ok).orElseThrow();
         } catch (Exception e) {
-            throw  new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
+    @PatchMapping("/cart/item/{cartItemId}")
+    public ResponseEntity<CartItemDto> updateItemQuantity(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+                                                          @PathVariable Long cartItemId,
+                                                          @RequestBody CartItemDto cartItemDto) {
+        try {
+            String username = jwtService.extractUsername((authHeader.substring(authHeaderBeginIndex)));
+            Optional<CartItemDto> cartItemOptional = cartService.updateCartItem(username, cartItemId, cartItemDto);
+            return cartItemOptional.map(ResponseEntity::ok).orElseThrow();
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
+    @DeleteMapping("/cart/item/{cartItemId}")
+    public ResponseEntity<Boolean> deleteCartItem(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+                                                  @PathVariable Long cartItemId) {
+        try {
+            String username = jwtService.extractUsername((authHeader.substring(authHeaderBeginIndex)));
+            Boolean cartItemDeleted = cartService.deleteCartItem(username, cartItemId);
+            return ResponseEntity.ok(cartItemDeleted);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
     }
 }

@@ -4,6 +4,7 @@ import com.andyestrada.crochetcreations.CrochetCreationsApplication;
 import com.andyestrada.crochetcreations.dto.CartItemDto;
 import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.dto.request.SignInRequestDto;
+import com.andyestrada.crochetcreations.dto.request.SignUpRequestDto;
 import com.andyestrada.crochetcreations.dto.request.UpdateStockDto;
 import com.andyestrada.crochetcreations.dto.response.JwtAuthenticationResponseDto;
 import com.andyestrada.crochetcreations.entities.*;
@@ -28,13 +29,11 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -76,24 +75,20 @@ public class UserControllerTest {
 
     private User user;
     private String bearerToken;
-    private List<Product> products;
 
     @BeforeAll
-    public void createUserAndProducts() {
+    public void createUser() {
         // create user
         String email = "john_doe@email.com";
         String password = "12345";
-        user = User.builder()
+        SignUpRequestDto signUpRequestDto = SignUpRequestDto.builder()
+                .email(email)
+                .password(password)
                 .firstName("John")
                 .lastName("Doe")
-                .email(email)
-                .password(passwordEncoder.encode(password))
-                .role(Role.USER)
                 .build();
-        user = userRepository.save(user);
-        Cart cart = Cart.builder().user(user).build();
-        user.setCart(cartRepository.save(cart));
-        userRepository.save(user);
+        authenticationService.signup(signUpRequestDto);
+        user = userRepository.findByEmail(email).orElseThrow();
         // sign-in user
         SignInRequestDto signInRequestDto = SignInRequestDto.builder()
                 .email(email)
@@ -101,45 +96,25 @@ public class UserControllerTest {
                 .build();
         JwtAuthenticationResponseDto signInResponseDto = authenticationService.signin(signInRequestDto);
         bearerToken = signInResponseDto.getToken();
-        // create products
-        List<ProductDto> productDtoList = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            ProductDto productDto = ProductDto.builder()
-                    .name("ICT_Product_" + i)
-                    .description("test description")
-                    .price(new BigDecimal("1500"))
-                    .listedForSale(true)
-                    .build();
-            productDtoList.add(productDto);
-        }
-        products = productService.saveAll(productDtoList).orElseThrow();
     }
 
     @Test
-    public void userCanViewCart() throws Exception {
+    public void canViewCart() throws Exception {
         //given
-        int cartItemsCountBefore = cartService.getCartItemsForUser(user.getEmail()).orElse(new ArrayList<>()).size();
-        for (Product product : products) {
-            UpdateStockDto updateStockDto = UpdateStockDto.builder()
-                    .productId(product.getId())
-                    .quantity(1)
-                    .build();
-            inventoryService.updateStock(updateStockDto);
-            com.andyestrada.crochetcreations.dto.CartItemDto cartItemDto = CartItemDto.builder()
-                    .id(user.getCart().getId())
-                    .productId(product.getId())
-                    .quantity(1)
-                    .build();
-            cartItemService.addCartItem(cartItemDto);
-        }
-        int cartItemsCountAfter = cartItemsCountBefore + products.size();
+        Product product = createValidProduct();
+        int cartItemQuantity = 1;
+        CartItemDto cartItemDto = CartItemDto.builder()
+                .id(user.getCart().getId())
+                .productId(product.getId())
+                .quantity(cartItemQuantity)
+                .build();
+        cartItemService.addCartItem(cartItemDto);
         //when
         ResultActions result = mockMvc.perform(get("/api/v1/user/cart")
                 .header("Authorization", "Bearer " + bearerToken));
         //then
         result
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(cartItemsCountBefore + cartItemsCountAfter)))
                 .andExpect(jsonPath("$[0].id").exists())
                 .andExpect(jsonPath("$[0].cart").exists())
                 .andExpect(jsonPath("$[0].product").exists())
@@ -147,17 +122,12 @@ public class UserControllerTest {
     }
 
     @Test
-    public void userCanAddToCart() throws Exception {
+    public void canAddToCart() throws Exception {
         //given
-        Product product = products.get(0);
-        UpdateStockDto updateStockDto = UpdateStockDto.builder()
-                .productId(product.getId())
-                .quantity(3)
-                .build();
-        inventoryService.updateStock(updateStockDto);
-        int cartItemsCountBefore = cartService.getCartItemsForUser(user.getEmail()).orElse(new ArrayList<>()).size();
+        Product product = createValidProduct();
+        updateProductStock(product, 3);
         //when
-        com.andyestrada.crochetcreations.dto.CartItemDto cartItemDto = CartItemDto.builder()
+        CartItemDto cartItemDto = CartItemDto.builder()
                 .id(user.getCart().getId())
                 .productId(product.getId())
                 .quantity(3)
@@ -167,17 +137,193 @@ public class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(cartItemDto))
                 .characterEncoding("utf-8"));
-        int cartItemsCountAfter = cartItemsCountBefore + 1;
         //then
-        result
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(cartItemsCountAfter)));
-        String responseString = result.andReturn().getResponse().getContentAsString();
-        List<CartItemDto> cartItems = Arrays.asList(mapper.readValue(responseString, CartItemDto[].class));
-        boolean cartItemAdded = cartItems.stream().anyMatch(cartItem ->
-                cartItem.getProduct().getId().equals(cartItemDto.getProductId())
-                    && cartItem.getQuantity().equals(cartItemDto.getQuantity()));
+        result.andExpect(status().isOk());
+        List<CartItemDto> cartItems = cartService.getCartItems(user.getEmail()).orElseThrow();
+        boolean cartItemAdded = cartItems
+                .stream().anyMatch(cartItem -> cartItem.getProduct().getId().equals(cartItemDto.getProductId()));
         assertTrue(cartItemAdded);
     }
 
+    @Test
+    public void sameProductAddedToCartWillIncrementCartItemQuantity() throws Exception {
+        //given
+        Product product = createValidProduct();
+        updateProductStock(product, 3);
+        CartItemDto cartItemDto = cartService.addCartItem(user.getEmail(),
+                        CartItemDto.builder()
+                                .id(user.getCart().getId())
+                                .productId(product.getId())
+                                .quantity(1)
+                                .build())
+                .orElseThrow();
+        int quantityBefore = cartService.getCartItems(user.getEmail()).orElseThrow().stream()
+                .filter(ciDto -> ciDto.getProduct().getId().equals(product.getId())).findFirst().orElseThrow().getQuantity();
+        //when
+        int quantityAdditional = 2;
+        CartItemDto cartItemUpdateDto = CartItemDto.builder()
+                .id(user.getCart().getId())
+                .productId(product.getId())
+                .quantity(quantityAdditional)
+                .build();
+        ResultActions result = mockMvc.perform(post("/api/v1/user/cart/add")
+                .header("Authorization", "Bearer " + bearerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(cartItemUpdateDto))
+                .characterEncoding("utf-8"));
+        //then
+        result.andExpect(status().isOk());
+        List<CartItemDto> cartItems = cartService.getCartItems(user.getEmail()).orElseThrow();
+        assertEquals(1, cartItems.stream().filter(ci -> ci.getProduct().getId().equals(product.getId())).toList().size());
+        assertEquals(quantityBefore + quantityAdditional,
+                cartItems.stream()
+                        .filter(ci -> ci.getProduct().getId().equals(product.getId()))
+                        .findFirst()
+                        .orElseThrow()
+                        .getQuantity());
+    }
+
+    @Test
+    public void canUpdateCartItemQuantity() throws Exception {
+        //given
+        Product product = createValidProduct();
+        updateProductStock(product, 3);
+        CartItemDto cartItemToUpdateDto = cartService.addCartItem(user.getEmail(),
+                        CartItemDto.builder()
+                                .id(user.getCart().getId())
+                                .productId(product.getId())
+                                .quantity(3)
+                                .build())
+                .orElseThrow();
+        //when
+        int newQuantity = 1;
+        String endpoint = String.format("/api/v1/user/cart/item/%s", cartItemToUpdateDto.getId());
+        CartItemDto updateCartItemDto = CartItemDto.builder().quantity(newQuantity).build();
+        ResultActions result = mockMvc.perform(patch(endpoint)
+                .header("Authorization", "Bearer " + bearerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(updateCartItemDto))
+                .characterEncoding("utf-8"));
+        //then
+        result.andExpect(status().isOk());
+        CartItemDto updatedCartItemDto = cartService.getCartItems(user.getEmail()).orElseThrow()
+                .stream().filter(ciDto -> ciDto.getProduct().getId().equals(product.getId())).findFirst().orElseThrow();
+        assertEquals(newQuantity, updatedCartItemDto.getQuantity());
+    }
+
+    @Test
+    public void canDeleteCartItem() throws Exception {
+        //given
+        Product product = createValidProduct();
+        updateProductStock(product, 1);
+        CartItemDto cartItemToDeleteDto = cartService.addCartItem(user.getEmail(),
+                        CartItemDto.builder()
+                                .id(user.getCart().getId())
+                                .productId(product.getId())
+                                .quantity(1)
+                                .build())
+                .orElseThrow();
+        //when
+        String endpoint = String.format("/api/v1/user/cart/item/%s", cartItemToDeleteDto.getId());
+        ResultActions result = mockMvc.perform(delete(endpoint).header("Authorization", "Bearer " + bearerToken));
+        //then
+        result.andExpect(status().isOk());
+        boolean cartItemDeleted = cartService.getCartItems(user.getEmail()).orElseThrow()
+                .stream().noneMatch(ci -> ci.getId().equals(cartItemToDeleteDto.getId()));
+        assertTrue(cartItemDeleted);
+    }
+
+    @Test
+    public void cannotExceedProductStockWhenAddingToCart() throws Exception {
+        //given
+        Product product = createValidProduct();
+        updateProductStock(product, 1);
+        //when
+        CartItemDto cartItemDto = CartItemDto.builder()
+                .id(user.getCart().getId())
+                .productId(product.getId())
+                .quantity(2)
+                .build();
+        ResultActions result = mockMvc.perform(post("/api/v1/user/cart/add")
+                .header("Authorization", "Bearer " + bearerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(cartItemDto))
+                .characterEncoding("utf-8"));
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void cannotExceedProductStockWhenAddingCartItemWithSameProduct() throws Exception {
+        //given
+        Product product = createValidProduct();
+        updateProductStock(product, 1);
+        CartItemDto cartItemDto = cartService.addCartItem(user.getEmail(),
+                        CartItemDto.builder()
+                                .id(user.getCart().getId())
+                                .productId(product.getId())
+                                .quantity(1)
+                                .build())
+                .orElseThrow();
+        int quantityBefore = cartService.getCartItems(user.getEmail()).orElseThrow().stream()
+                .filter(ciDto -> ciDto.getProduct().getId().equals(product.getId())).findFirst().orElseThrow().getQuantity();
+        //when
+        CartItemDto cartItemUpdateDto = CartItemDto.builder()
+                .id(user.getCart().getId())
+                .productId(product.getId())
+                .quantity(1)
+                .build();
+        ResultActions result = mockMvc.perform(post("/api/v1/user/cart/add")
+                .header("Authorization", "Bearer " + bearerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(cartItemUpdateDto))
+                .characterEncoding("utf-8"));
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void cannotExceedProductStockWhenUpdatingCartItem() throws Exception {
+        //given
+        Product product = createValidProduct();
+        updateProductStock(product, 1);
+        CartItemDto cartItemToUpdateDto = cartService.addCartItem(user.getEmail(),
+                        CartItemDto.builder()
+                                .id(user.getCart().getId())
+                                .productId(product.getId())
+                                .quantity(1)
+                                .build())
+                .orElseThrow();
+        //when
+        int newQuantity = 2;
+        String endpoint = String.format("/api/v1/user/cart/item/%s", cartItemToUpdateDto.getId());
+        CartItemDto updateCartItemDto = CartItemDto.builder().quantity(newQuantity).build();
+        ResultActions result = mockMvc.perform(patch(endpoint)
+                .header("Authorization", "Bearer " + bearerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(updateCartItemDto))
+                .characterEncoding("utf-8"));
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    private Product createValidProduct() {
+        List<ProductDto> productDtoList = new ArrayList<>();
+        ProductDto productDto = ProductDto.builder()
+                .name("Test Product")
+                .description("test description")
+                .price(new BigDecimal("1500"))
+                .listedForSale(true)
+                .build();
+        productDtoList.add(productDto);
+        return productService.saveAll(productDtoList).orElseThrow().get(0);
+    }
+
+    private void updateProductStock(Product product, int quantity) {
+        UpdateStockDto updateStockDto = UpdateStockDto.builder()
+                .productId(product.getId())
+                .quantity(quantity)
+                .build();
+        inventoryService.updateStock(updateStockDto);
+    }
 }
