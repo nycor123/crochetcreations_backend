@@ -1,7 +1,7 @@
 package com.andyestrada.crochetcreations.entities;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.List;
@@ -11,18 +11,18 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "ORDERS")
-public class Order {
+@Table(name = "CARTS")
+public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JsonManagedReference
-    @ToString.Exclude
-    @OneToMany(mappedBy = "order")
-    private List<Item> items;
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    @NotNull
+    private User user;
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "cart")
     private List<CartItem> cartItems;
 }

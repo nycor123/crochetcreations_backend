@@ -39,6 +39,10 @@ public class Product {
     @ToString.Exclude
     private List<Item> stock;
 
+    @ToString.Exclude
+    @OneToMany(mappedBy = "product")
+    private List<CartItem> cartItems;
+
     private String description;
 
     public Optional<ProductPrice> getEffectivePrice() {

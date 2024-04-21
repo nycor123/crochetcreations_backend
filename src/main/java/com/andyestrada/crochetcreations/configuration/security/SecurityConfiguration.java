@@ -1,7 +1,6 @@
 package com.andyestrada.crochetcreations.configuration.security;
 
 import com.andyestrada.crochetcreations.entities.Role;
-import com.andyestrada.crochetcreations.services.authentication.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +14,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -26,7 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final UserService userService;
+    private final UserDetailsService userDetailsService;
 
     @Bean
     @Order(1)
@@ -44,7 +44,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/products/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/images/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/inventory/**").hasAuthority(Role.ADMIN.toString())
-                        .requestMatchers("/api/v1/user/**").hasAuthority(Role.USER.toString())
+                        .requestMatchers("/api/v1/user/cart/**").hasAuthority(Role.USER.toString())
                         .anyRequest().authenticated()
                 );
         return http.build();
@@ -69,7 +69,7 @@ public class SecurityConfiguration {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userService.userDetailsService());
+        authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

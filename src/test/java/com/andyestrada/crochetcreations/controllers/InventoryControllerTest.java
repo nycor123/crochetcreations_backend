@@ -1,7 +1,7 @@
 package com.andyestrada.crochetcreations.controllers;
 
 import com.andyestrada.crochetcreations.CrochetCreationsApplication;
-import com.andyestrada.crochetcreations.dto.request.ProductDto;
+import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.dto.request.UpdateStockDto;
 import com.andyestrada.crochetcreations.entities.Item;
 import com.andyestrada.crochetcreations.entities.Order;
@@ -162,7 +162,9 @@ public class InventoryControllerTest {
     public void canGetItemsByProductIdAndSoldStatus() throws Exception {
         //given
         Product product = products.get(0);
-        int unsoldCountBefore = inventoryService.getItems(false).orElse(new ArrayList<>()).size();
+        int unsoldCountBefore = inventoryService.getItems(false).orElse(new ArrayList<>())
+                .stream().filter(item -> item.getProduct().getId().equals(product.getId())).toList()
+                .size();
         int createItemCount = 2;
         int expectedUnsoldCount = unsoldCountBefore + 1;
         UpdateStockDto updateStockDto = UpdateStockDto.builder()

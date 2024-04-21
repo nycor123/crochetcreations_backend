@@ -1,7 +1,7 @@
 package com.andyestrada.crochetcreations.controllers;
 
 import com.andyestrada.crochetcreations.CrochetCreationsApplication;
-import com.andyestrada.crochetcreations.dto.request.ProductDto;
+import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.services.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
