@@ -99,6 +99,11 @@ public class UserControllerTest {
     }
 
     @Test
+    public void canViewUserInfo() {
+        // TODO
+    }
+
+    @Test
     public void canViewCart() throws Exception {
         //given
         Product product = createValidProduct();
