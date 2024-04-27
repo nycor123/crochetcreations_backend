@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -40,6 +41,22 @@ public class AuthenticationController {
                     .ok()
                     .headers(responseHeaders)
                     .body(responseDto);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
+    @PostMapping("/signout")
+    public ResponseEntity<String> signout() {
+        try {
+            ResponseCookie cookie = ResponseCookie.from("accessToken", "")
+                    .httpOnly(true)
+                    .path("/")
+                    .secure(false)
+                    .build();
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.add(HttpHeaders.SET_COOKIE, cookie.toString());
+            return ResponseEntity.ok().headers(responseHeaders).body("{ \"success\": \"true\" }");
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }

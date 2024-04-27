@@ -99,8 +99,18 @@ public class UserControllerTest {
     }
 
     @Test
-    public void canViewUserInfo() {
-        // TODO
+    public void canViewUserInfo() throws Exception {
+        //given
+        //when
+        ResultActions result = mockMvc.perform(get("/api/v1/user/info")
+                .header("Authorization", "Bearer " + bearerToken));
+        //then
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("email").exists())
+                .andExpect(jsonPath("firstName").exists())
+                .andExpect(jsonPath("lastName").exists())
+                .andExpect(jsonPath("role").exists());
     }
 
     @Test

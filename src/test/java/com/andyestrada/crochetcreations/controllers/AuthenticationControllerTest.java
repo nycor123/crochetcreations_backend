@@ -5,17 +5,21 @@ import com.andyestrada.crochetcreations.dto.request.SignInRequestDto;
 import com.andyestrada.crochetcreations.dto.response.JwtAuthenticationResponseDto;
 import com.andyestrada.crochetcreations.services.authentication.AuthenticationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,5 +57,15 @@ public class AuthenticationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token", is(jwtToken)));
 
+    }
+
+    @Test
+    public void canSignout() throws Exception {
+        //given
+        //when
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/signout")).andReturn();
+        String setCookieHeader = result.getResponse().getHeader(HttpHeaders.SET_COOKIE);
+        //then
+        assertTrue(setCookieHeader.contains("accessToken=;"));
     }
 }
