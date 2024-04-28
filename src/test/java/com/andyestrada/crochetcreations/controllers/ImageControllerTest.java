@@ -7,7 +7,9 @@ import com.andyestrada.crochetcreations.services.ImageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,7 +20,9 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -29,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         classes = CrochetCreationsApplication.class)
 @AutoConfigureMockMvc(addFilters = false)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ImageControllerTest {
 
     @Autowired
@@ -39,6 +44,15 @@ public class ImageControllerTest {
 
     @Autowired
     private ImageService imageService;
+
+    private List<Long> imageIds = new ArrayList<>();
+
+    @AfterAll
+    public void cleanup() {
+        for (Long imageId : imageIds) {
+            imageService.deleteImage(imageId);
+        }
+    }
 
     @Test
     public void shouldUploadValidImage() throws Exception {
@@ -60,7 +74,7 @@ public class ImageControllerTest {
                 .andExpect(jsonPath("$.url").isNotEmpty());
         //cleanup
         Integer id = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.id");
-        imageService.deleteImage(id.longValue());
+        imageIds.add(Long.valueOf(id));
     }
 
     @Test
@@ -84,7 +98,7 @@ public class ImageControllerTest {
                 .andExpect(jsonPath("$.url").isNotEmpty());
         //cleanup
         Integer id = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.id");
-        imageService.deleteImage(id.longValue());
+        imageIds.add(Long.valueOf(id));
     }
 
     @Test

@@ -5,8 +5,10 @@ import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.services.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -33,7 +35,9 @@ public class ProductController {
     }
 
     @PostMapping()
-    public ResponseEntity<List<Product>> saveProducts(@RequestBody List<ProductDto> productDtoList) {
+    public ResponseEntity<List<Product>> saveProducts(@Nullable @CookieValue("accessToken") String accessToken,
+                                                      @Nullable @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+                                                      @RequestBody List<ProductDto> productDtoList) {
         try {
             Optional<List<Product>> productsOptional = productService.saveAll(productDtoList);
             return productsOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.badRequest().build());

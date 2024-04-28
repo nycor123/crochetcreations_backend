@@ -2,9 +2,14 @@ package com.andyestrada.crochetcreations.controllers;
 
 import com.andyestrada.crochetcreations.CrochetCreationsApplication;
 import com.andyestrada.crochetcreations.dto.ProductDto;
+import com.andyestrada.crochetcreations.dto.request.ImageDto;
+import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.Product;
+import com.andyestrada.crochetcreations.services.ImageService;
 import com.andyestrada.crochetcreations.services.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -12,11 +17,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -39,7 +48,11 @@ public class ProductControllerTest {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private ImageService imageService;
+
     private List<Product> savedProducts;
+    private List<Image> images = new ArrayList<>();
 
     @BeforeAll
     public void setup() {
@@ -52,6 +65,13 @@ public class ProductControllerTest {
             productDtoList.add(productDto);
         }
         savedProducts = productService.saveAll(productDtoList).get();
+    }
+
+    @AfterAll
+    public void cleanup() {
+        for (Image image : images) {
+            imageService.deleteImage(image.getId());
+        }
     }
 
     @Test
@@ -86,6 +106,21 @@ public class ProductControllerTest {
                 .price(new BigDecimal("100"))
                 .listedForSale(true)
                 .build();
+
+        File file = new File("src/test/resources/sample_image.png");
+        FileInputStream input = new FileInputStream(file);
+        MockMultipartFile multipartFile = new MockMultipartFile(
+                "SampleImage",
+                file.getName(),
+                "image/png",
+                IOUtils.toByteArray(input));
+        ImageDto imageDto = ImageDto.builder().file(multipartFile).build();
+        Image image = imageService.uploadImage(imageDto).orElseThrow();
+        images.add(image); // for cleanup purposes
+        List<Long> imageIds = new ArrayList<>();
+        imageIds.add(image.getId());
+        productDto.setImageIds(imageIds);
+
         List<ProductDto> productDtos = new ArrayList<>();
         productDtos.add(productDto);
         //when
@@ -97,7 +132,8 @@ public class ProductControllerTest {
         result
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isNotEmpty());
+                .andExpect(jsonPath("$").isNotEmpty())
+                .andExpect(jsonPath("$[0].images").isNotEmpty());
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.andyestrada.crochetcreations.configuration.security;
 
 import com.andyestrada.crochetcreations.entities.Role;
 import lombok.RequiredArgsConstructor;
+import org.apache.http.protocol.HTTP;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -39,6 +40,7 @@ public class SecurityConfiguration {
                 .securityMatcher("/api/**")
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS,"/api/v1/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/products/**").hasAuthority(Role.ADMIN.toString())

@@ -73,6 +73,7 @@ public class ProductServiceImpl implements ProductService {
                     .listedForSale(productDto.getListedForSale() != null ? productDto.getListedForSale() : false)
                     .build();
             updatePrice(product, productDto.getPrice());
+            updateImages(product, productDto.getImageIds());
             products.add(product);
         }
         validateProducts(products);
@@ -147,6 +148,20 @@ public class ProductServiceImpl implements ProductService {
             prices.add(newPrice);
         } else if (amount != null && amount.compareTo(MINIMUM_PRICE) < 0) {
             throw new IllegalStateException("Product price amount should be greater than zero (0.00).");
+        }
+    }
+
+    private void updateImages(Product product, List<Long> imageIds) {
+        try {
+            if (imageIds != null) {
+                List<Image> productImages = product.getImages() != null ? product.getImages() : new ArrayList<>();
+                for (Long imageId : imageIds) {
+                    productImages.add(imageRepository.findById(imageId).orElseThrow());
+                }
+                product.setImages(productImages);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("An error occurred while trying to update product's images.", e);
         }
     }
 
