@@ -156,7 +156,9 @@ public class ProductServiceImpl implements ProductService {
             if (imageIds != null) {
                 List<Image> productImages = product.getImages() != null ? product.getImages() : new ArrayList<>();
                 for (Long imageId : imageIds) {
-                    productImages.add(imageRepository.findById(imageId).orElseThrow());
+                    Image image = imageRepository.findById(imageId).orElseThrow();
+                    image.setProduct(product);
+                    productImages.add(image);
                 }
                 product.setImages(productImages);
             }

@@ -100,13 +100,13 @@ public class ProductControllerTest {
 
     @Test
     public void shouldSaveValidNewProduct() throws Exception {
-        //given
+        /* GIVEN **/
         ProductDto productDto = ProductDto.builder()
                 .name("Test_Product")
                 .price(new BigDecimal("100"))
                 .listedForSale(true)
                 .build();
-
+        // create an Image
         File file = new File("src/test/resources/sample_image.png");
         FileInputStream input = new FileInputStream(file);
         MockMultipartFile multipartFile = new MockMultipartFile(
@@ -117,18 +117,18 @@ public class ProductControllerTest {
         ImageDto imageDto = ImageDto.builder().file(multipartFile).build();
         Image image = imageService.uploadImage(imageDto).orElseThrow();
         images.add(image); // for cleanup purposes
+        // create a ProductDto associated with the created Image
         List<Long> imageIds = new ArrayList<>();
         imageIds.add(image.getId());
         productDto.setImageIds(imageIds);
-
         List<ProductDto> productDtos = new ArrayList<>();
         productDtos.add(productDto);
-        //when
+        /* WHEN **/
         ResultActions result = mockMvc.perform(post("/api/v1/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(productDtos))
                 .characterEncoding("utf-8"));
-        //then
+        /* THEN **/
         result
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
