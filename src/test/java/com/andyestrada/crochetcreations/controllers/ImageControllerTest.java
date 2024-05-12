@@ -111,6 +111,23 @@ public class ImageControllerTest {
         result.andExpect(status().isOk());
     }
 
+    @Test
+    public void shouldNotUploadFileWithInvalidType() throws Exception {
+        // given
+        File file = new File("src/test/resources/application.properties");
+        FileInputStream input = new FileInputStream(file);
+        MockMultipartFile multipartFile = new MockMultipartFile(
+                "SampleImage",
+                file.getName(),
+                "text/plain",
+                IOUtils.toByteArray(input));
+        // when
+        ResultActions result = mockMvc.perform(multipart("/api/v1/images/upload")
+                .file("file", multipartFile.getBytes()));
+        // then
+        result.andExpect(status().isBadRequest());
+    }
+
     private Image uploadImage() throws Exception {
         File file = new File("src/test/resources/sample_image.png");
         FileInputStream input = new FileInputStream(file);

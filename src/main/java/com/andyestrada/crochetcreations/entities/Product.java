@@ -43,6 +43,7 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<CartItem> cartItems;
 
+    @Column(length = 1000)
     private String description;
 
     public Optional<ProductPrice> getEffectivePrice() {
