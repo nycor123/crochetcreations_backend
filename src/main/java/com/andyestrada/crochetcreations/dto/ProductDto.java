@@ -20,5 +20,5 @@ public class ProductDto {
     private String description;
     private BigDecimal price;
     private Boolean listedForSale;
-    private List<Long> imageIds;
+    private List<ProductImageDto> images;
 }

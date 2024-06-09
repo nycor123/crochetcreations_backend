@@ -1,10 +1,11 @@
 package com.andyestrada.crochetcreations.services;
 
 import com.andyestrada.crochetcreations.dto.ProductDto;
+import com.andyestrada.crochetcreations.dto.ProductImageDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.Product;
+import com.andyestrada.crochetcreations.entities.ProductImage;
 import com.andyestrada.crochetcreations.entities.ProductPrice;
-import com.andyestrada.crochetcreations.repositories.ImageRepository;
 import com.andyestrada.crochetcreations.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
 
     @Autowired
-    private final ImageRepository imageRepository;
+    private final ImageService imageService;
 
     private final Logger _logger = LoggerFactory.getLogger(ProductServiceImpl.class);
 
@@ -73,7 +74,7 @@ public class ProductServiceImpl implements ProductService {
                     .listedForSale(productDto.getListedForSale() != null ? productDto.getListedForSale() : false)
                     .build();
             updatePrice(product, productDto.getPrice());
-            updateImages(product, productDto.getImageIds());
+            updateImages(product, productDto.getImages());
             products.add(product);
         }
         validateProducts(products);
@@ -95,24 +96,8 @@ public class ProductServiceImpl implements ProductService {
         if (productDto.getListedForSale() != null) {
             productToUpdate.setListedForSale(productDto.getListedForSale());
         }
-        if (productDto.getImageIds() != null) {
-            List<Long> existingImageIds = productToUpdate.getImages().stream().map(img -> img.getId()).toList();
-            // add Image/s to Product
-            for (Long imageId : productDto.getImageIds()) {
-                if (!existingImageIds.contains(imageId)) {
-                    Image imageToAdd = imageRepository.findById(imageId).orElseThrow();
-                    imageToAdd.setProduct(productToUpdate);
-                    productToUpdate.getImages().add(imageToAdd);
-                }
-            }
-            // remove Image/s that are not included in productDto from Product
-            List<Long> imageIdsToRemove = existingImageIds.stream()
-                    .filter(existingImageId -> !productDto.getImageIds().contains(existingImageId)).toList();
-            for (Long imageIdToRemove : imageIdsToRemove) {
-                Image imageToRemove = imageRepository.findById(imageIdToRemove).orElseThrow();
-                productToUpdate.getImages().remove(imageToRemove);
-                imageRepository.delete(imageToRemove);
-            }
+        if (productDto.getImages() != null) {
+            updateImages(productToUpdate, productDto.getImages());
         }
         List<Product> productsForValidation = new ArrayList<>();
         productsForValidation.add(productToUpdate);
@@ -151,20 +136,37 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private void updateImages(Product product, List<Long> imageIds) {
+    private void updateImages(Product product, List<ProductImageDto> productImageDtoList) {
         try {
-            if (imageIds != null) {
-                List<Image> productImages = product.getImages() != null ? product.getImages() : new ArrayList<>();
-                for (Long imageId : imageIds) {
-                    Image image = imageRepository.findById(imageId).orElseThrow();
-                    image.setProduct(product);
-                    productImages.add(image);
+            if (productImageDtoList != null) {
+                List<ProductImage> updatedProductImages = new ArrayList<>();
+                for (ProductImageDto productImageDto : productImageDtoList) {
+                    Image image = imageService.findById(productImageDto.getId()).orElseThrow();
+                    ProductImage productImage = image instanceof ProductImage ? (ProductImage) image : convertImageToProductImage(image);
+                    productImage.setProduct(product);
+                    productImage.setPriority(productImageDto.getPriority());
+                    updatedProductImages.add(productImage);
                 }
-                product.setImages(productImages);
+                if (product.getImages() != null) {
+                    List<Long> existingImageList = product.getImages().stream().map(pi -> pi.getId()).toList();
+                    List<Long> updatedImageList = updatedProductImages.stream().map(pi -> pi.getId()).toList();
+                    for (Long imageId : existingImageList) {
+                        if (!updatedImageList.contains(imageId)) {
+                            imageService.deleteImage(imageId);
+                        }
+                    }
+                }
+                product.setImages(updatedProductImages);
             }
         } catch (Exception e) {
             throw new RuntimeException("An error occurred while trying to update product's images.", e);
         }
+    }
+
+    private ProductImage convertImageToProductImage(Image image) {
+        ProductImage productImage = new ProductImage(image);
+        imageService.deleteImage(image.getId());
+        return productImage;
     }
 
     private void validateProducts(List<Product> products) {

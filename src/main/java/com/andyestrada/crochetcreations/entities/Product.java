@@ -32,7 +32,7 @@ public class Product {
     @JsonManagedReference
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @ToString.Exclude
-    private List<Image> images;
+    private List<ProductImage> images;
 
     @JsonManagedReference
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)

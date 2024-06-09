@@ -1,18 +1,19 @@
 package com.andyestrada.crochetcreations.services;
 
 import com.andyestrada.crochetcreations.dto.ProductDto;
+import com.andyestrada.crochetcreations.dto.ProductImageDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.Product;
+import com.andyestrada.crochetcreations.entities.ProductImage;
 import com.andyestrada.crochetcreations.repositories.ImageRepository;
+import com.andyestrada.crochetcreations.repositories.ProductImageRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,6 +25,9 @@ public class ProductServiceTest {
 
     @Autowired
     private ImageRepository imageRepository;
+
+    @Autowired
+    private ProductImageRepository productImageRepository;
 
     /*
      Should set new Product's listedForSale property to true if:
@@ -164,37 +168,87 @@ public class ProductServiceTest {
         //given
         Product product = createProduct();
         Image image = createImage();
-        List<Long> imageIds = new ArrayList<>();
-        imageIds.add(image.getId());
         //when
-        ProductDto updateProductDto = ProductDto.builder().imageIds(imageIds).build();
+        ProductImageDto productImageDto = ProductImageDto.builder()
+                .id(image.getId())
+                .priority(1)
+                .build();
+        ProductDto updateProductDto = ProductDto.builder().images(Collections.singletonList(productImageDto)).build();
         productService.updateProduct(product.getId(), updateProductDto);
         //then
-        product = productService.findById(product.getId()).get();
+        product = productService.findById(product.getId()).orElseThrow();
         assertNotNull(product.getImages());
-        List<Long> updatedProductImageIds = product.getImages().stream().map(img -> img.getId()).toList();
-        assertTrue(updatedProductImageIds.contains(image.getId()));
+        List<String> productImageUrls = product.getImages().stream().map(img -> img.getUrl()).toList();
+        assertTrue(productImageUrls.contains(image.getUrl()));
     }
 
     @Test
     public void canRemoveImageFromProduct() {
         //given
-        Product product = createProduct();
         Image image1 = createImage();
         Image image2 = createImage();
-        List<Long> imageIds = new ArrayList<>();
-        imageIds.add(image1.getId());
-        imageIds.add(image2.getId());
-        ProductDto updateProductDto = ProductDto.builder().imageIds(imageIds).build();
-        productService.updateProduct(product.getId(), updateProductDto);
+        List<Image> images = new ArrayList<>();
+        images.add(image1);
+        images.add(image2);
+        List<ProductImageDto> productImageDtos = new ArrayList<>();
+        for (int i = 0; i < images.size(); i++) {
+            ProductImageDto productImageDto = ProductImageDto.builder()
+                    .id(images.get(i).getId())
+                    .priority(i)
+                    .build();
+            productImageDtos.add(productImageDto);
+        }
+        ProductDto updateProductDto = ProductDto.builder().images(productImageDtos).build();
+        Product product = productService.updateProduct(createProduct().getId(), updateProductDto).orElseThrow();
         //when
-        List<Long> updatedImageIds = new ArrayList<>();
-        updatedImageIds.add(image1.getId());
-        ProductDto removeImageProductDto = ProductDto.builder().imageIds(updatedImageIds).build();
+        ProductImage productImage = product.getImages().get(0);
+        ProductImageDto productImageDto = ProductImageDto.builder()
+                .id(productImage.getId())
+                .priority(1)
+                .build();
+        ProductDto removeImageProductDto = ProductDto.builder()
+                .images(Collections.singletonList(productImageDto))
+                .build();
         productService.updateProduct(product.getId(), removeImageProductDto);
         //then
-        Product updatedProduct = productService.findById(product.getId()).get();
-        assertTrue(updatedProduct.getImages().size() == 1);
+        Product productWithUpdatedImages = productService.findById(product.getId()).orElseThrow();
+        assertEquals(1, productWithUpdatedImages.getImages().size());
+    }
+
+    @Test
+    public void canUpdateProductImagePriority() {
+        //given
+        Image image1 = createImage();
+        Image image2 = createImage();
+        List<Image> images = new ArrayList<>();
+        images.add(image1);
+        images.add(image2);
+        List<ProductImageDto> productImageDtos = new ArrayList<>();
+        for (int i = 0; i < images.size(); i++) {
+            ProductImageDto productImageDto = ProductImageDto.builder()
+                    .id(images.get(i).getId())
+                    .priority(i)
+                    .build();
+            productImageDtos.add(productImageDto);
+        }
+        ProductDto productDto = ProductDto.builder().images(productImageDtos).build();
+        Product product = productService.updateProduct(createProduct().getId(), productDto).orElseThrow();
+        //when
+        List<ProductImage> productImages = product.getImages();
+        List<ProductImageDto> updateProductImageDtos = new ArrayList<>();
+        for (int i = 0; i < productImages.size(); i++) {
+            ProductImageDto productImageDto = ProductImageDto.builder()
+                    .id(productImages.get(i).getId())
+                    .priority(100 + i)
+                    .build();
+            updateProductImageDtos.add(productImageDto);
+        }
+        Product productWithUpdatedImages = productService.updateProduct(product.getId(),
+                ProductDto.builder().images(updateProductImageDtos).build()).orElseThrow();
+        List<Integer> imagePriorities = productWithUpdatedImages.getImages().stream().map(img -> img.getPriority()).toList();
+        assertEquals(imagePriorities.size(), productImages.size());
+        assertTrue(imagePriorities.contains(100));
+        assertTrue(imagePriorities.contains(101));
     }
 
     @Test
@@ -202,17 +256,22 @@ public class ProductServiceTest {
         //given
         Product product = createProduct();
         Image image = createImage();
-        List<Long> imageIdList = new ArrayList<>();
-        imageIdList.add(image.getId());
-        ProductDto addImageProductDto = ProductDto.builder().imageIds(imageIdList).build();
+        ProductImageDto productImageDto = ProductImageDto.builder()
+                .id(image.getId())
+                .priority(1)
+                .build();
+        ProductDto addImageProductDto = ProductDto.builder().images(Collections.singletonList(productImageDto)).build();
         productService.updateProduct(product.getId(), addImageProductDto);
+        List<Long> productImageIds = productService.findById(product.getId()).orElseThrow().getImages()
+                .stream().map(pi -> pi.getId()).toList();
         //when
-        List<Long> emptyImageIdList = new ArrayList<>();
-        ProductDto removeImageProductDto = ProductDto.builder().imageIds(emptyImageIdList).build();
+        ProductDto removeImageProductDto = ProductDto.builder().images(new ArrayList<>()).build();
         productService.updateProduct(product.getId(), removeImageProductDto);
         //then
         Optional<Image> imageOptional = imageRepository.findById(image.getId());
         assertTrue(imageOptional.isEmpty());
+        Optional<ProductImage> productImageOptional = productImageRepository.findById(productImageIds.get(0));
+        assertTrue(productImageOptional.isEmpty());
     }
 
     private Product createProduct() {
@@ -234,5 +293,4 @@ public class ProductServiceTest {
                 .build();
         return imageRepository.save(image);
     }
-
 }

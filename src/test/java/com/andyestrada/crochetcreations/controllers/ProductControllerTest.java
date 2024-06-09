@@ -2,6 +2,7 @@ package com.andyestrada.crochetcreations.controllers;
 
 import com.andyestrada.crochetcreations.CrochetCreationsApplication;
 import com.andyestrada.crochetcreations.dto.ProductDto;
+import com.andyestrada.crochetcreations.dto.ProductImageDto;
 import com.andyestrada.crochetcreations.dto.request.ImageDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.Product;
@@ -25,7 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -118,9 +119,11 @@ public class ProductControllerTest {
         Image image = imageService.uploadImage(imageDto).orElseThrow();
         images.add(image); // for cleanup purposes
         // create a ProductDto associated with the created Image
-        List<Long> imageIds = new ArrayList<>();
-        imageIds.add(image.getId());
-        productDto.setImageIds(imageIds);
+        ProductImageDto productImageDto = ProductImageDto.builder()
+                .id(image.getId())
+                .priority(1)
+                .build();
+        productDto.setImages(Collections.singletonList(productImageDto));
         List<ProductDto> productDtos = new ArrayList<>();
         productDtos.add(productDto);
         /* WHEN **/
