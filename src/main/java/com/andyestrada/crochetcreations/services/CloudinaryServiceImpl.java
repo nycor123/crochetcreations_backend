@@ -29,7 +29,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             options.put("folder", folderName);
             Map uploadedFile = cloudinary.uploader().upload(file.getBytes(), options);
             String publicId = (String) uploadedFile.get("public_id");
-            String url = cloudinary.url().secure(true).generate(publicId);
+            String url = (String) uploadedFile.get("secure_url");
             return new HashMap<String, String>() {{
                 put("publicId", publicId);
                 put("url", url);

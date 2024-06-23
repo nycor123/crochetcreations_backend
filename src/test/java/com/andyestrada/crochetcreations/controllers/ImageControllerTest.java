@@ -50,7 +50,7 @@ public class ImageControllerTest {
     @AfterAll
     public void cleanup() {
         for (Long imageId : imageIds) {
-            imageService.deleteImage(imageId);
+            imageService.deleteImage(imageId, true);
         }
     }
 

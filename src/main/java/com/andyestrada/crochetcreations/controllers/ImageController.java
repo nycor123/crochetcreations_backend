@@ -45,7 +45,7 @@ public class ImageController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Boolean> delete(@PathVariable long id) {
-        Boolean isDeleted = imageService.deleteImage(id);
+        Boolean isDeleted = imageService.deleteImage(id, true);
         return isDeleted ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
     }
 

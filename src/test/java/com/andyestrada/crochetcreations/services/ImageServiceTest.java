@@ -69,7 +69,7 @@ public class ImageServiceTest {
                 .build();
         Image image = imageService.uploadImage(imageDto).get();
         //when
-        Boolean isDeleted = imageService.deleteImage(image.getId());
+        Boolean isDeleted = imageService.deleteImage(image.getId(), true);
         //then
         assertTrue(isDeleted);
     }

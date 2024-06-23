@@ -9,6 +9,7 @@ import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.services.ImageService;
 import com.andyestrada.crochetcreations.services.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,8 +53,8 @@ public class ProductControllerTest {
     @Autowired
     private ImageService imageService;
 
-    private List<Product> savedProducts;
-    private List<Image> images = new ArrayList<>();
+    private List<Product> _savedProducts;
+    private List<Long> _imageIds = new ArrayList<>();
 
     @BeforeAll
     public void setup() {
@@ -65,13 +66,13 @@ public class ProductControllerTest {
                     .build();
             productDtoList.add(productDto);
         }
-        savedProducts = productService.saveAll(productDtoList).get();
+        _savedProducts = productService.saveAll(productDtoList).get();
     }
 
     @AfterAll
     public void cleanup() {
-        for (Image image : images) {
-            imageService.deleteImage(image.getId());
+        for (Long imageId : _imageIds) {
+            imageService.deleteImage(imageId, true);
         }
     }
 
@@ -90,7 +91,7 @@ public class ProductControllerTest {
     @Test
     public void shouldGetProductById() throws Exception {
         //given
-        Product product = savedProducts.get(0);
+        Product product = _savedProducts.get(0);
         //when
         ResultActions result = mockMvc.perform(get("/api/v1/products/" + product.getId()));
         //then
@@ -117,7 +118,6 @@ public class ProductControllerTest {
                 IOUtils.toByteArray(input));
         ImageDto imageDto = ImageDto.builder().file(multipartFile).build();
         Image image = imageService.uploadImage(imageDto).orElseThrow();
-        images.add(image); // for cleanup purposes
         // create a ProductDto associated with the created Image
         ProductImageDto productImageDto = ProductImageDto.builder()
                 .id(image.getId())
@@ -137,6 +137,16 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isNotEmpty())
                 .andExpect(jsonPath("$[0].images").isNotEmpty());
+        /* CLEANUP **/
+        Integer productId = JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$[0].id");
+        List<Image> imagesToDelete = productService.findById(Long.valueOf(productId)).orElseThrow()
+                .getImages()
+                .stream()
+                .map(img -> (Image) img)
+                .toList();
+        for (Image img : imagesToDelete) {
+            _imageIds.add(img.getId());
+        }
     }
 
     @Test
@@ -157,7 +167,7 @@ public class ProductControllerTest {
     @Test
     public void shouldUpdateValidProduct() throws Exception {
         //given
-        Product product = savedProducts.get(0);
+        Product product = _savedProducts.get(0);
         BigDecimal newPriceAmount = new BigDecimal("100.01");
         //when
         ProductDto productDto = ProductDto.builder().price(newPriceAmount).listedForSale(true).build();
@@ -175,7 +185,7 @@ public class ProductControllerTest {
     @Test
     public void shouldNotUpdateInvalidProduct() throws Exception {
         //given
-        Product product = savedProducts.get(0);
+        Product product = _savedProducts.get(0);
         //when
         ProductDto productDto = ProductDto.builder().listedForSale(true).build();
         ResultActions result = mockMvc.perform(put("/api/v1/products/" + product.getId())

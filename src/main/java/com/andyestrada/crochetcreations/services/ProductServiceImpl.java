@@ -152,7 +152,7 @@ public class ProductServiceImpl implements ProductService {
                     List<Long> updatedImageList = updatedProductImages.stream().map(pi -> pi.getId()).toList();
                     for (Long imageId : existingImageList) {
                         if (!updatedImageList.contains(imageId)) {
-                            imageService.deleteImage(imageId);
+                            imageService.deleteImage(imageId, true);
                         }
                     }
                 }
@@ -165,7 +165,7 @@ public class ProductServiceImpl implements ProductService {
 
     private ProductImage convertImageToProductImage(Image image) {
         ProductImage productImage = new ProductImage(image);
-        imageService.deleteImage(image.getId());
+        imageService.deleteImage(image.getId(), false);
         return productImage;
     }
 

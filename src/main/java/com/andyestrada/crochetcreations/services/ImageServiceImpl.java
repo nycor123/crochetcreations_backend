@@ -47,10 +47,12 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public Boolean deleteImage(Long id) {
+    public Boolean deleteImage(Long id, Boolean deleteFromRemote) {
         try {
             Image image = imageRepository.findById(id).orElseThrow();
-            this.deleteImageFromRemote(image);
+            if (deleteFromRemote) {
+                this.deleteImageFromRemote(image);
+            }
             imageRepository.delete(image);
             return true;
         } catch (Exception e) {
