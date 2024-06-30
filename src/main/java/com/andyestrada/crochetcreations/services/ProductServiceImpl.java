@@ -90,6 +90,12 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public Optional<Product> updateProduct(Long id, ProductDto productDto) {
         Product productToUpdate = this.findById(id).orElseThrow();
+        if (productDto.getName() != null) {
+            productToUpdate.setName(productDto.getName());
+        }
+        if (productDto.getDescription() != null) {
+            productToUpdate.setDescription(productDto.getDescription());
+        }
         if (productDto.getPrice() != null) {
             this.updatePrice(productToUpdate, productDto.getPrice());
         }
