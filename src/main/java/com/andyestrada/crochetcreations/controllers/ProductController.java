@@ -3,7 +3,6 @@ package com.andyestrada.crochetcreations.controllers;
 import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.services.ProductService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -16,11 +15,14 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/products")
-@RequiredArgsConstructor
 public class ProductController {
 
-    @Autowired
     private final ProductService productService;
+
+    @Autowired
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Product>> getProducts() {

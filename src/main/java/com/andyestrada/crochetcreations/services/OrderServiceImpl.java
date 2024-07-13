@@ -4,7 +4,6 @@ import com.andyestrada.crochetcreations.entities.Item;
 import com.andyestrada.crochetcreations.entities.Order;
 import com.andyestrada.crochetcreations.repositories.ItemRepository;
 import com.andyestrada.crochetcreations.repositories.OrderRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,14 +11,16 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    @Autowired
     private final OrderRepository orderRepository;
+    private final ItemRepository itemRepository;
 
     @Autowired
-    private final ItemRepository itemRepository;
+    public OrderServiceImpl(OrderRepository orderRepository, ItemRepository itemRepository) {
+        this.orderRepository = orderRepository;
+        this.itemRepository = itemRepository;
+    }
 
     @Override
     public Optional<List<Order>> findAll() {

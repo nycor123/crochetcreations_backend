@@ -4,21 +4,24 @@ import com.andyestrada.crochetcreations.dto.request.SignInRequestDto;
 import com.andyestrada.crochetcreations.dto.request.SignUpRequestDto;
 import com.andyestrada.crochetcreations.dto.response.JwtAuthenticationResponseDto;
 import com.andyestrada.crochetcreations.services.authentication.AuthenticationService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@RequiredArgsConstructor
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+
+    @Autowired
+    public AuthenticationController(AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<JwtAuthenticationResponseDto> signup(@RequestBody SignUpRequestDto request) {

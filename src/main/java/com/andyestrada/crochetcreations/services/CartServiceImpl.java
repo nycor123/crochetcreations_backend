@@ -11,7 +11,6 @@ import com.andyestrada.crochetcreations.repositories.CartItemRepository;
 import com.andyestrada.crochetcreations.repositories.CartRepository;
 import com.andyestrada.crochetcreations.repositories.ProductRepository;
 import com.andyestrada.crochetcreations.repositories.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,20 +21,24 @@ import java.util.Optional;
 
 import static java.util.Objects.isNull;
 
-@RequiredArgsConstructor
 @Service
 public class CartServiceImpl implements CartService {
-    @Autowired
+
     private final UserRepository userRepository;
-
-    @Autowired
     private final ProductRepository productRepository;
-
-    @Autowired
     private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
 
     @Autowired
-    private final CartItemRepository cartItemRepository;
+    public CartServiceImpl(UserRepository userRepository,
+                           ProductRepository productRepository,
+                           CartRepository cartRepository,
+                           CartItemRepository cartItemRepository) {
+        this.userRepository = userRepository;
+        this.productRepository = productRepository;
+        this.cartRepository = cartRepository;
+        this.cartItemRepository = cartItemRepository;
+    }
 
     @Override
     @Transactional

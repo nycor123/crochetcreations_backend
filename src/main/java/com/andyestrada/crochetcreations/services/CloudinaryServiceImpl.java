@@ -2,7 +2,6 @@ package com.andyestrada.crochetcreations.services;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +13,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class CloudinaryServiceImpl implements CloudinaryService {
 
-    @Autowired
     private final Cloudinary cloudinary;
+
+    @Autowired
+    public CloudinaryServiceImpl(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudinaryServiceImpl.class);
 

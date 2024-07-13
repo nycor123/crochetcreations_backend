@@ -1,8 +1,7 @@
 package com.andyestrada.crochetcreations.configuration.security;
 
 import com.andyestrada.crochetcreations.entities.Role;
-import lombok.RequiredArgsConstructor;
-import org.apache.http.protocol.HTTP;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -23,11 +22,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
+
+    @Autowired
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter,
+                                 UserDetailsService userDetailsService) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Bean
     @Order(1)

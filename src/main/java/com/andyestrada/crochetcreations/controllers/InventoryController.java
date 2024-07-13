@@ -3,11 +3,9 @@ package com.andyestrada.crochetcreations.controllers;
 import com.andyestrada.crochetcreations.dto.request.UpdateStockDto;
 import com.andyestrada.crochetcreations.entities.Item;
 import com.andyestrada.crochetcreations.services.InventoryService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -16,11 +14,14 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/inventory")
-@RequiredArgsConstructor
 public class InventoryController {
 
-    @Autowired
     private final InventoryService inventoryService;
+
+    @Autowired
+    public InventoryController(InventoryService inventoryService) {
+        this.inventoryService = inventoryService;
+    }
 
     @PostMapping("/update-stock")
     public ResponseEntity<List<Item>> updateStock(@RequestBody UpdateStockDto updateStockDto) {

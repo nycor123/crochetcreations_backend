@@ -5,13 +5,11 @@ import com.andyestrada.crochetcreations.dto.UserInfoDto;
 import com.andyestrada.crochetcreations.services.CartService;
 import com.andyestrada.crochetcreations.services.CustomUserDetailsService;
 import com.andyestrada.crochetcreations.services.authentication.JwtService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,18 +19,22 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/user")
-@RequiredArgsConstructor
 public class UserController {
-    @Autowired
+
     private final JwtService jwtService;
-
-    @Autowired
     private final CustomUserDetailsService userDetailsService;
-
-    @Autowired
     private final CartService cartService;
 
     private final int authHeaderBeginIndex = 7;
+
+    @Autowired
+    public UserController(JwtService jwtService,
+                          CustomUserDetailsService customUserDetailsService,
+                          CartService cartService) {
+        this.jwtService = jwtService;
+        this.userDetailsService = customUserDetailsService;
+        this.cartService = cartService;
+    }
 
     @GetMapping("/info")
     public ResponseEntity<UserInfoDto> getUserInfo(@Nullable @CookieValue("accessToken") String accessToken,

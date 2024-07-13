@@ -8,7 +8,6 @@ import com.andyestrada.crochetcreations.entities.Role;
 import com.andyestrada.crochetcreations.entities.User;
 import com.andyestrada.crochetcreations.repositories.CartRepository;
 import com.andyestrada.crochetcreations.repositories.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,22 +16,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
-    @Autowired
+
     private final UserRepository userRepository;
-
-    @Autowired
     private final PasswordEncoder passwordEncoder;
-
-    @Autowired
     private final JwtService jwtService;
-
-    @Autowired
     private final AuthenticationManager authenticationManager;
+    private final CartRepository cartRepository;
 
     @Autowired
-    private final CartRepository cartRepository;
+    public AuthenticationServiceImpl(UserRepository userRepository,
+                                     PasswordEncoder passwordEncoder,
+                                     JwtService jwtService,
+                                     AuthenticationManager authenticationManager,
+                                     CartRepository cartRepository) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+        this.cartRepository = cartRepository;
+    }
 
     @Override
     public JwtAuthenticationResponseDto signup(SignUpRequestDto request) {

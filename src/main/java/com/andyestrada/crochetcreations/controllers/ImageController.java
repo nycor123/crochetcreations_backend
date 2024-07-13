@@ -3,7 +3,6 @@ package com.andyestrada.crochetcreations.controllers;
 import com.andyestrada.crochetcreations.dto.request.ImageDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.services.ImageService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,11 +15,14 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/images")
-@RequiredArgsConstructor
 public class ImageController {
 
-    @Autowired
     private final ImageService imageService;
+
+    @Autowired
+    public ImageController(ImageService imageService) {
+        this.imageService = imageService;
+    }
 
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Image> upload(@RequestPart MultipartFile file) {

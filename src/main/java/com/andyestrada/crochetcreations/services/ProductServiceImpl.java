@@ -8,7 +8,6 @@ import com.andyestrada.crochetcreations.entities.ProductImage;
 import com.andyestrada.crochetcreations.entities.ProductPrice;
 import com.andyestrada.crochetcreations.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,18 +21,20 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-    @Autowired
     private final ProductRepository productRepository;
-
-    @Autowired
     private final ImageService imageService;
 
     private final Logger _logger = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     private final static BigDecimal MINIMUM_PRICE = new BigDecimal("0.01");
+
+    @Autowired
+    public ProductServiceImpl(ProductRepository productRepository, ImageService imageService) {
+        this.productRepository = productRepository;
+        this.imageService = imageService;
+    }
 
     @Override
     public Optional<List<Product>> findAll() {

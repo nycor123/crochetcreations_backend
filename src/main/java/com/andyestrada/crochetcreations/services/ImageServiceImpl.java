@@ -3,7 +3,6 @@ package com.andyestrada.crochetcreations.services;
 import com.andyestrada.crochetcreations.dto.request.ImageDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.repositories.ImageRepository;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,16 +12,18 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
 
-    @Autowired
     private final CloudinaryService cloudinaryService;
-
-    @Autowired
     private final ImageRepository imageRepository;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageServiceImpl.class);
+
+    @Autowired
+    public ImageServiceImpl(CloudinaryService cloudinaryService, ImageRepository imageRepository) {
+        this.cloudinaryService = cloudinaryService;
+        this.imageRepository = imageRepository;
+    }
 
     @Override
     public Optional<Image> uploadImage(ImageDto imageDto) {

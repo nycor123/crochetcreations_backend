@@ -4,7 +4,6 @@ import com.andyestrada.crochetcreations.dto.request.UpdateStockDto;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.entities.Item;
 import com.andyestrada.crochetcreations.repositories.ItemRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,14 +12,16 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class InventoryServiceImpl implements InventoryService {
 
-    @Autowired
     private final ProductService productService;
+    private final ItemRepository itemRepository;
 
     @Autowired
-    private final ItemRepository itemRepository;
+    public InventoryServiceImpl(ProductService productService, ItemRepository itemRepository) {
+        this.productService = productService;
+        this.itemRepository = itemRepository;
+    }
 
     @Override
     public Optional<List<Item>> updateStock(UpdateStockDto updateStockDto) {
