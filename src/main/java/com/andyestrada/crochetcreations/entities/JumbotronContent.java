@@ -1,5 +1,6 @@
 package com.andyestrada.crochetcreations.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,10 +15,14 @@ public class JumbotronContent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonManagedReference
     @OneToOne(mappedBy = "jumbotronContent", cascade = CascadeType.ALL)
     @ToString.Exclude
     private JumbotronImage image;
 
+    @Column
     private String url;
+
+    @Column
     private Integer priority;
 }

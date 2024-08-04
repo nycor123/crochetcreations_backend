@@ -8,5 +8,8 @@ import java.util.Optional;
 
 public interface JumbotronContentService {
     Optional<List<JumbotronContent>> getAll();
+    Optional<JumbotronContent> findById(Long jContentId);
     JumbotronContent save(JumbotronContentDto jContentDto);
+    JumbotronContent update(Long id, JumbotronContentDto jumbotronContentDto);
+    Boolean delete(Long jContentId);
 }

@@ -14,8 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 public class JumbotronServiceTest {
@@ -70,8 +69,41 @@ public class JumbotronServiceTest {
     }
 
     @Test
+    public void canUpdateJumbotronContent() {
+        //given
+        Image image = createImage();
+        JumbotronContentDto jContentDto = JumbotronContentDto.builder()
+                .imageId(image.getId())
+                .url("test@url.com")
+                .priority(1)
+                .build();
+        JumbotronContent jContent = jumbotronContentService.save(jContentDto);
+        //when
+        String newUrl = "new@url.com";
+        JumbotronContentDto updateJContentDto = JumbotronContentDto.builder()
+                .id(jContent.getId())
+                .url(newUrl)
+                .build();
+        JumbotronContent updatedJContent = jumbotronContentService.update(jContent.getId(), updateJContentDto);
+        //then
+        assertEquals(newUrl, updatedJContent.getUrl());
+    }
+
+    @Test
     public void canDeleteJumbotronContent() {
-        //TODO
+        //given
+        Image image = createImage();
+        JumbotronContentDto jContentDto = JumbotronContentDto.builder()
+                .imageId(image.getId())
+                .url("test@url.com")
+                .priority(1)
+                .build();
+        JumbotronContent jContent = jumbotronContentService.save(jContentDto);
+        //when
+        jumbotronContentService.delete(jContent.getId());
+        //then
+        boolean isJumbotronContentDeleted = jumbotronContentRepository.findById(jContent.getId()).isEmpty();
+        assertTrue(isJumbotronContentDeleted);
     }
 
     private Image createImage() {

@@ -29,6 +29,9 @@ public class ProductPrice {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    @Column
     private BigDecimal amount;
+
+    @Column
     private LocalDateTime until;
 }

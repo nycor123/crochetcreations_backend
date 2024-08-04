@@ -31,8 +31,13 @@ public class User implements UserDetails {
     @OneToOne(mappedBy = "user")
     private Cart cart;
 
+    @Column
     private String firstName;
+
+    @Column
     private String lastName;
+
+    @Column
     private String password;
 
     @Override

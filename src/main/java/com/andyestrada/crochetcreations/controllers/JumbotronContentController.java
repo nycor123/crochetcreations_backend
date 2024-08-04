@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/jumbotron/content")
+@RequestMapping("/api/v1/jumbotron/contents")
 public class JumbotronContentController {
 
     private final JumbotronContentService jumbotronContentService;
@@ -32,6 +32,12 @@ public class JumbotronContentController {
         return jContentsOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.ok(new ArrayList<>()));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<JumbotronContent> getJumbotronContent(@PathVariable long id) {
+        Optional<JumbotronContent> jContentOptional = jumbotronContentService.findById(id);
+        return jContentOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public ResponseEntity<JumbotronContent> saveJumbotronContent(@RequestBody JumbotronContentDto jContentDto) {
         try {
@@ -40,6 +46,23 @@ public class JumbotronContentController {
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         }
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<JumbotronContent> updateJumbotronContent(@PathVariable long id,
+                                                                   @RequestBody JumbotronContentDto jContentDto) {
+        try {
+            JumbotronContent savedJContent = jumbotronContentService.update(id, jContentDto);
+            return ResponseEntity.ok(savedJContent);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Boolean> deleteJumbotronContent(@PathVariable long id) {
+        Boolean isJContentDeleted = jumbotronContentService.delete(id);
+        return ResponseEntity.ok(isJContentDeleted);
     }
 
 }

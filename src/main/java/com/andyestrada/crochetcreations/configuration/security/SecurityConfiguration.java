@@ -51,6 +51,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.POST, "/api/v1/jumbotron/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/products/**").hasAuthority(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/jumbotron/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/images/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/inventory/**").hasAuthority(Role.ADMIN.toString())
                         .requestMatchers("/api/v1/user/cart/**").hasAuthority(Role.USER.toString())

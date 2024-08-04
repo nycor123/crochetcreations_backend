@@ -1,5 +1,6 @@
 package com.andyestrada.crochetcreations.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,7 @@ public class CartItem {
     @NotNull
     private Cart cart;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "product_id")
     @NotNull
@@ -33,6 +35,7 @@ public class CartItem {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    @Column
     @Min(1)
     @NotNull
     private Integer quantity;

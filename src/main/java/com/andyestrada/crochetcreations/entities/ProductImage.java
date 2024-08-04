@@ -1,10 +1,7 @@
 package com.andyestrada.crochetcreations.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -26,5 +23,7 @@ public class ProductImage extends Image {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
+
+    @Column
     private Integer priority;
 }
