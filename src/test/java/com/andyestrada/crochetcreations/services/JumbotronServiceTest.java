@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -104,6 +105,41 @@ public class JumbotronServiceTest {
         //then
         boolean isJumbotronContentDeleted = jumbotronContentRepository.findById(jContent.getId()).isEmpty();
         assertTrue(isJumbotronContentDeleted);
+    }
+
+    @Test
+    public void canUpdateAllJumbotronContents() {
+        //given
+        List<JumbotronContent> jContents = new ArrayList<>();
+        for (int i = 1; i <= 3; i++) {
+            Image image = createImage();
+            JumbotronContentDto jContentDto = JumbotronContentDto.builder()
+                    .imageId(image.getId())
+                    .url("test@url.com")
+                    .priority(i)
+                    .build();
+            jContents.add(jumbotronContentService.save(jContentDto));
+        }
+        jContents.sort(Comparator.comparingInt(JumbotronContent::getPriority));
+        //when
+        JumbotronContentDto jContentDto1 = JumbotronContentDto.builder()
+                .id(jContents.get(1).getId())
+                .priority(1)
+                .build();
+        JumbotronContentDto jContentDto2 = JumbotronContentDto.builder()
+                .id(jContents.get(2).getId())
+                .priority(2)
+                .build();
+        List<JumbotronContentDto> jContentDtos = new ArrayList<>();
+        jContentDtos.add(jContentDto1);
+        jContentDtos.add(jContentDto2);
+        List<JumbotronContent> updatedJumbotronContents = jumbotronContentService.updateAll(jContentDtos).orElseThrow();
+        //then
+        assertFalse(updatedJumbotronContents.stream().map(JumbotronContent::getId).toList().contains(jContents.get(0).getId()));
+        for (JumbotronContentDto jContentDto : jContentDtos) {
+            JumbotronContent updatedJContent = jumbotronContentService.findById(jContentDto.getId()).orElseThrow();
+            assertEquals(jContentDto.getPriority(), updatedJContent.getPriority());
+        }
     }
 
     private Image createImage() {

@@ -88,6 +88,23 @@ public class JumbotronContentServiceImpl implements JumbotronContentService {
         return jumbotronContentRepository.save(jContent);
     }
 
+    @Override
+    public Optional<List<JumbotronContent>> updateAll(List<JumbotronContentDto> jumbotronContentDtos) {
+        List<JumbotronContent> allJumbotronContents = jumbotronContentRepository.findAll();
+        for (JumbotronContent jContent : allJumbotronContents) {
+            List<Long> jumbotronContentIdsToRetain = jumbotronContentDtos.stream().map(jContentDto -> jContentDto.getId()).toList();
+            boolean retainJContent = jumbotronContentIdsToRetain.contains(jContent.getId());
+            if (!retainJContent) {
+                imageService.deleteImage(jContent.getImage().getId(), true);
+                jumbotronContentRepository.delete(jContent);
+            }
+        }
+        for (JumbotronContentDto jumbotronContentDto : jumbotronContentDtos) {
+            this.update(jumbotronContentDto.getId(), jumbotronContentDto);
+        }
+        return Optional.of(jumbotronContentRepository.findAll());
+    }
+
     private JumbotronImage convertImageToJumbotronImage(Image image) {
         JumbotronImage jumbotronImage = new JumbotronImage(image);
         imageService.deleteImage(image.getId(), false);

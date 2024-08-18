@@ -11,5 +11,6 @@ public interface JumbotronContentService {
     Optional<JumbotronContent> findById(Long jContentId);
     JumbotronContent save(JumbotronContentDto jContentDto);
     JumbotronContent update(Long id, JumbotronContentDto jumbotronContentDto);
+    Optional<List<JumbotronContent>> updateAll(List<JumbotronContentDto> jumbotronContentDtos);
     Boolean delete(Long jContentId);
 }

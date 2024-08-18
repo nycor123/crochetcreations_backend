@@ -48,6 +48,16 @@ public class JumbotronContentController {
         }
     }
 
+    @PatchMapping
+    public ResponseEntity<List<JumbotronContent>> updateJumbotronContents(@RequestBody List<JumbotronContentDto> jContents) {
+        try {
+            List<JumbotronContent> jumbotronContents = jumbotronContentService.updateAll(jContents).orElseThrow();
+            return ResponseEntity.ok(jumbotronContents);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<JumbotronContent> updateJumbotronContent(@PathVariable long id,
                                                                    @RequestBody JumbotronContentDto jContentDto) {
