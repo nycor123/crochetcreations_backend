@@ -4,7 +4,6 @@ import com.andyestrada.crochetcreations.dto.JumbotronContentDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.JumbotronContent;
 import com.andyestrada.crochetcreations.entities.JumbotronImage;
-import com.andyestrada.crochetcreations.repositories.ImageRepository;
 import com.andyestrada.crochetcreations.repositories.JumbotronContentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,10 +22,7 @@ public class JumbotronContentServiceImpl implements JumbotronContentService {
     private static final Logger _logger = LoggerFactory.getLogger(JumbotronContentServiceImpl.class);
 
     @Autowired
-    public JumbotronContentServiceImpl(
-            JumbotronContentRepository jumbotronContentRepository,
-            ImageService imageService) {
-
+    public JumbotronContentServiceImpl(JumbotronContentRepository jumbotronContentRepository, ImageService imageService) {
         this.jumbotronContentRepository = jumbotronContentRepository;
         this.imageService = imageService;
     }
@@ -92,7 +88,7 @@ public class JumbotronContentServiceImpl implements JumbotronContentService {
     public Optional<List<JumbotronContent>> updateAll(List<JumbotronContentDto> jumbotronContentDtos) {
         List<JumbotronContent> allJumbotronContents = jumbotronContentRepository.findAll();
         for (JumbotronContent jContent : allJumbotronContents) {
-            List<Long> jumbotronContentIdsToRetain = jumbotronContentDtos.stream().map(jContentDto -> jContentDto.getId()).toList();
+            List<Long> jumbotronContentIdsToRetain = jumbotronContentDtos.stream().map(JumbotronContentDto::getId).toList();
             boolean retainJContent = jumbotronContentIdsToRetain.contains(jContent.getId());
             if (!retainJContent) {
                 imageService.deleteImage(jContent.getImage().getId(), true);
