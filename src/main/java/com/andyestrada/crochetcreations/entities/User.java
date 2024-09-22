@@ -40,6 +40,9 @@ public class User implements UserDetails {
     @Column
     private String password;
 
+    @Column
+    private String pictureUrl;
+
     @Override
     public String getUsername() {
         return email;

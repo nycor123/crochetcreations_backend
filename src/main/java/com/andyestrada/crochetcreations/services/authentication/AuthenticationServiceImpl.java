@@ -39,7 +39,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public JwtAuthenticationResponseDto signup(SignUpRequestDto request) {
-        var user = User.builder()
+        User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
@@ -48,17 +48,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
         userRepository.save(user);
         createUserCart(user);
-        var jwt = jwtService.generateToken(user);
+        String jwt = jwtService.generateToken(user);
         return JwtAuthenticationResponseDto.builder().token(jwt).build();
     }
 
     @Override
     public JwtAuthenticationResponseDto signin(SignInRequestDto request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        var user = userRepository.findByEmail(request.getEmail())
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Invalid email or password"));
-        var jwt = jwtService.generateToken(user);
+        String jwt = jwtService.generateToken(user);
         return JwtAuthenticationResponseDto.builder().token(jwt).build();
     }
 

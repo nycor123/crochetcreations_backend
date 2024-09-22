@@ -13,6 +13,9 @@ public class WebConfig {
     @Value("${webconfig.allowed_origins}")
     private String[] allowedOrigins;
 
+    @Value("${webconfig.allowed_methods}")
+    private String[] allowedMethods;
+
     @Value("${webconfig.allow_credentials}")
     private boolean allowCredentials;
 
@@ -22,8 +25,8 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedMethods("*")
                         .allowedOrigins(allowedOrigins)
+                        .allowedMethods(allowedMethods)
                         .allowCredentials(allowCredentials);
             }
         };

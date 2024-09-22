@@ -34,6 +34,7 @@ public class UserDetailsServiceImpl implements CustomUserDetailsService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .role(user.getRole().toString())
+                .pictureUrl(user.getPictureUrl())
                 .build();
     }
 }

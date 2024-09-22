@@ -14,4 +14,5 @@ public class UserInfoDto {
     private String firstName;
     private String lastName;
     private String role;
+    private String pictureUrl;
 }
