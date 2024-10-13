@@ -7,9 +7,12 @@ import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.entities.ProductImage;
 import com.andyestrada.crochetcreations.repositories.ImageRepository;
 import com.andyestrada.crochetcreations.repositories.ProductImageRepository;
+import com.andyestrada.crochetcreations.repositories.ProductRepository;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
@@ -24,10 +27,21 @@ public class ProductServiceTest {
     private ProductService productService;
 
     @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
     private ImageRepository imageRepository;
 
     @Autowired
     private ProductImageRepository productImageRepository;
+
+    @Value("${products.search.max_page_size}")
+    private String maxPageSize;
+
+    @BeforeEach
+    public void reset() {
+        productRepository.deleteAll();
+    }
 
     /*
      Should set new Product's listedForSale property to true if:
@@ -272,6 +286,37 @@ public class ProductServiceTest {
         assertTrue(imageOptional.isEmpty());
         Optional<ProductImage> productImageOptional = productImageRepository.findById(productImageIds.get(0));
         assertTrue(productImageOptional.isEmpty());
+    }
+
+    @Test
+    public void findAllCountMatchesMaxPageSize() {
+        //given
+        int productCount = 51;
+        for (int i = 0; i < productCount; i++) {
+            createProduct();
+        }
+        //when
+        int findAllProductCount = productService.findAll().orElseThrow().size();
+        //then
+        assertEquals(Integer.parseInt(maxPageSize), findAllProductCount);
+    }
+
+    @Test
+    public void canPaginateResults() {
+        //given
+        int pageSize = 10;
+        int productCount = 101;
+        for (int i = 0; i < productCount; i++) {
+            createProduct();
+        }
+        //when
+        List<Long> productIds = new ArrayList<>();
+        for (int i = 0; (i * pageSize) < productCount; i++) {
+            productIds.addAll(productService.findWithPagination(i, pageSize).orElseThrow().stream().map(Product::getId).toList());
+        }
+        Set<Long> productIdsSet = new HashSet<>(productIds);
+        //then
+        assertEquals(productCount, productIdsSet.size());
     }
 
     private Product createProduct() {

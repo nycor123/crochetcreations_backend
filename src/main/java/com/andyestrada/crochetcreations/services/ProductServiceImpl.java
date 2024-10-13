@@ -12,6 +12,9 @@ import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,21 +28,33 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ImageService imageService;
+    private final int maxPageSize;
 
     private final Logger _logger = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     private final static BigDecimal MINIMUM_PRICE = new BigDecimal("0.01");
 
     @Autowired
-    public ProductServiceImpl(ProductRepository productRepository, ImageService imageService) {
+    public ProductServiceImpl(ProductRepository productRepository,
+                              ImageService imageService,
+                              @Value("${products.search.max_page_size}") String maxPageSize) {
         this.productRepository = productRepository;
         this.imageService = imageService;
+        this.maxPageSize = Integer.parseInt(maxPageSize);
     }
 
     @Override
     public Optional<List<Product>> findAll() {
+        return findWithPagination(0, maxPageSize);
+    }
+
+    @Override
+    public Optional<List<Product>> findWithPagination(int page, int size) {
+        size = Math.min(size, maxPageSize);
         try {
-            return Optional.of(productRepository.findAll());
+            Sort sort = Sort.by(Sort.Direction.ASC, "id");
+            List<Product> result = productRepository.findAll(PageRequest.of(page, size, sort)).get().toList();
+            return Optional.of(result);
         } catch (Exception e) {
             _logger.error("ProductService::findAll | An exception occurred while trying to find all products.", e);
             return Optional.empty();
