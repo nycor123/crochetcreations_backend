@@ -2,11 +2,13 @@ package com.andyestrada.crochetcreations.services;
 
 import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.dto.ProductImageDto;
+import com.andyestrada.crochetcreations.dto.response.search.ProductSearchDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.entities.ProductImage;
 import com.andyestrada.crochetcreations.entities.ProductPrice;
 import com.andyestrada.crochetcreations.repositories.ProductRepository;
+import com.andyestrada.crochetcreations.search.ProductSearchCriteria;
 import jakarta.transaction.Transactional;
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -37,10 +40,10 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     public ProductServiceImpl(ProductRepository productRepository,
                               ImageService imageService,
-                              @Value("${products.search.max_page_size}") String maxPageSize) {
+                              @Value("${products.search.max_page_size}") int maxPageSize) {
         this.productRepository = productRepository;
         this.imageService = imageService;
-        this.maxPageSize = Integer.parseInt(maxPageSize);
+        this.maxPageSize = maxPageSize;
     }
 
     @Override
@@ -59,6 +62,32 @@ public class ProductServiceImpl implements ProductService {
             _logger.error("ProductService::findAll | An exception occurred while trying to find all products.", e);
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Optional<ProductSearchDto> findWithCriteria(ProductSearchCriteria criteria) {
+        ProductSearchDto result = ProductSearchDto.builder().pageData(new ArrayList<>()).build();
+        Long page = criteria.getPage() != null ? criteria.getPage() : 0;
+        Long pageSize = criteria.getPageSize() != null ?
+                (criteria.getPageSize() <= Integer.valueOf(maxPageSize).longValue()) ? criteria.getPageSize() : maxPageSize
+                : maxPageSize;
+        Sort.Direction direction = criteria.getSortDirection() != null ? criteria.getSortDirection() : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page.intValue(), pageSize.intValue(), Sort.by(direction, "id"));
+
+        if (criteria.getSortBy() != null) {
+            pageable = PageRequest.of(page.intValue(), pageSize.intValue(), Sort.by(direction, criteria.getSortBy()));
+        }
+
+        if (criteria.getName() != null) {
+            List<Product> products = productRepository.findByNameContaining(criteria.getName(), pageable).get().toList();
+            result.setNumberOfResults(productRepository.findByNameContainingCount(criteria.getName()));
+            result.getPageData().addAll(products);
+        }
+
+        result.setPageIndex(page);
+        result.setPageSize(pageSize);
+
+        return Optional.of(result);
     }
 
     @Override

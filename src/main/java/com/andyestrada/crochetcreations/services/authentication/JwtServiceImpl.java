@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,15 @@ import java.util.function.Function;
 @Service
 public class JwtServiceImpl implements JwtService {
 
-    @Value("${token.signing.key}")
-    private String jwtSigningKey;
+    private final String jwtSigningKey;
+    private final int tokenDurationInMinutes;
+
+    @Autowired
+    public JwtServiceImpl(@Value("${token.signing.key}") String jwtSigningKey,
+                         @Value("${token.duration.minutes}") int tokenDurationInMinutes) {
+        this.jwtSigningKey = jwtSigningKey;
+        this.tokenDurationInMinutes = tokenDurationInMinutes;
+    }
 
     @Override
     public String extractUsername(String token) {
@@ -47,7 +55,7 @@ public class JwtServiceImpl implements JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * tokenDurationInMinutes))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

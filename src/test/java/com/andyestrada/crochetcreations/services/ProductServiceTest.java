@@ -2,12 +2,14 @@ package com.andyestrada.crochetcreations.services;
 
 import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.dto.ProductImageDto;
+import com.andyestrada.crochetcreations.dto.response.search.ProductSearchDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.entities.ProductImage;
 import com.andyestrada.crochetcreations.repositories.ImageRepository;
 import com.andyestrada.crochetcreations.repositories.ProductImageRepository;
 import com.andyestrada.crochetcreations.repositories.ProductRepository;
+import com.andyestrada.crochetcreations.search.ProductSearchCriteria;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -317,6 +319,25 @@ public class ProductServiceTest {
         Set<Long> productIdsSet = new HashSet<>(productIds);
         //then
         assertEquals(productCount, productIdsSet.size());
+    }
+
+    @Test
+    public void canSearchProductsByName() {
+        //given
+        String productName = "The Product";
+        int productCount = 10;
+        for (int i = 0; i < productCount; i++) {
+            createProduct();
+        }
+        Product product = productService.findAll().orElseThrow().get(0);
+        productService.updateProduct(product.getId(), ProductDto.builder().name(productName).build());
+        //when
+        ProductSearchCriteria productSearchCriteria = ProductSearchCriteria.builder()
+                .name(productName)
+                .build();
+        ProductSearchDto result = productService.findWithCriteria(productSearchCriteria).orElseThrow();
+        //then
+        assertEquals(productName, result.getPageData().get(0).getName());
     }
 
     private Product createProduct() {
