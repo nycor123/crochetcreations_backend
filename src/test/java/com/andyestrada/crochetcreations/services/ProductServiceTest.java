@@ -298,9 +298,13 @@ public class ProductServiceTest {
             createProduct();
         }
         //when
-        int findAllProductCount = productService.findAll().orElseThrow().size();
+        ProductSearchCriteria searchCriteria = ProductSearchCriteria.builder()
+                .name("")
+                .page(0L)
+                .build();
+        Long findAllProductCount = productService.findWithCriteria(searchCriteria).orElseThrow().getPageSize();
         //then
-        assertEquals(Integer.parseInt(maxPageSize), findAllProductCount);
+        assertEquals(Long.valueOf(maxPageSize), findAllProductCount);
     }
 
     @Test
@@ -314,7 +318,13 @@ public class ProductServiceTest {
         //when
         List<Long> productIds = new ArrayList<>();
         for (int i = 0; (i * pageSize) < productCount; i++) {
-            productIds.addAll(productService.findWithPagination(i, pageSize).orElseThrow().stream().map(Product::getId).toList());
+            ProductSearchCriteria searchCriteria = ProductSearchCriteria.builder()
+                    .name("")
+                    .page(Long.valueOf(i))
+                    .pageSize(Long.valueOf(pageSize))
+                    .build();
+            List<Product> pagedResults = productService.findWithCriteria(searchCriteria).orElseThrow().getPageData();
+            productIds.addAll(pagedResults.stream().map(Product::getId).toList());
         }
         Set<Long> productIdsSet = new HashSet<>(productIds);
         //then
@@ -329,7 +339,10 @@ public class ProductServiceTest {
         for (int i = 0; i < productCount; i++) {
             createProduct();
         }
-        Product product = productService.findAll().orElseThrow().get(0);
+        Product product = productService.findWithCriteria(ProductSearchCriteria.builder().name("").build())
+                .orElseThrow()
+                .getPageData()
+                .get(0);
         productService.updateProduct(product.getId(), ProductDto.builder().name(productName).build());
         //when
         ProductSearchCriteria productSearchCriteria = ProductSearchCriteria.builder()

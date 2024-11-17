@@ -77,18 +77,6 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void shouldGetAllProducts() throws Exception {
-        //given
-        //when
-        ResultActions result = mockMvc.perform(get("/api/v1/products"));
-        //then
-        result
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isNotEmpty());
-    }
-
-    @Test
     public void shouldGetProductById() throws Exception {
         //given
         Product product = _savedProducts.get(0);

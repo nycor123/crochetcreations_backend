@@ -47,24 +47,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Optional<List<Product>> findAll() {
-        return findWithPagination(0, maxPageSize);
-    }
-
-    @Override
-    public Optional<List<Product>> findWithPagination(int page, int size) {
-        size = Math.min(size, maxPageSize);
-        try {
-            Sort sort = Sort.by(Sort.Direction.ASC, "id");
-            List<Product> result = productRepository.findAll(PageRequest.of(page, size, sort)).get().toList();
-            return Optional.of(result);
-        } catch (Exception e) {
-            _logger.error("ProductService::findAll | An exception occurred while trying to find all products.", e);
-            return Optional.empty();
-        }
-    }
-
-    @Override
     public Optional<ProductSearchDto> findWithCriteria(ProductSearchCriteria criteria) {
         ProductSearchDto result = ProductSearchDto.builder().pageData(new ArrayList<>()).build();
         Long page = criteria.getPage() != null ? criteria.getPage() : 0;

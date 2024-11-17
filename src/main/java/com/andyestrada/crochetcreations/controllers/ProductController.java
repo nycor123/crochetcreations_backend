@@ -31,27 +31,6 @@ public class ProductController {
         this.maxPageSize = maxPageSize;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Product>> getProducts(@RequestParam(required = false) Map<String, String> queryParams) {
-        try {
-            Optional<List<Product>> productsOptional;
-            int page;
-            int size;
-            if (!queryParams.isEmpty()) {
-                page = queryParams.get("page") != null && queryParams.get("page").chars().allMatch(Character::isDigit) ?
-                        Integer.parseInt(queryParams.get("page")) : 0;
-                size = queryParams.get("size") != null && queryParams.get("size").chars().allMatch(Character::isDigit) ?
-                        Integer.parseInt(queryParams.get("size")) : maxPageSize;
-                productsOptional = productService.findWithPagination(page, size);
-            } else {
-                productsOptional = productService.findAll();
-            }
-            return productsOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.ok(new ArrayList<>()));
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-        }
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable long id) {
         Optional<Product> productOptional = productService.findById(id);
