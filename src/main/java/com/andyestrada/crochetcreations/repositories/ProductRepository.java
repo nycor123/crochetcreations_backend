@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    @Query(value = "SELECT * FROM Products WHERE Name LIKE %?1%", nativeQuery = true)
+    @Query(value = "SELECT * FROM Products WHERE LOWER(Name) LIKE LOWER(concat('%', ?1, '%'))", nativeQuery = true)
     Page<Product> findByNameContaining(String name, Pageable pageable);
 
-    @Query(value = "SELECT COUNT(Id) FROM Products WHERE Name LIKE %?1%", nativeQuery = true)
+    @Query(value = "SELECT COUNT(Id) FROM Products WHERE LOWER(Name) LIKE LOWER(concat('%', ?1, '%'))", nativeQuery = true)
     Long findByNameContainingCount(String name);
 
 }
