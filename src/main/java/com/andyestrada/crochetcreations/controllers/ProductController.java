@@ -1,9 +1,9 @@
 package com.andyestrada.crochetcreations.controllers;
 
 import com.andyestrada.crochetcreations.dto.ProductDto;
-import com.andyestrada.crochetcreations.dto.response.search.ProductSearchDto;
+import com.andyestrada.crochetcreations.dto.response.search.ProductSearchResultDto;
 import com.andyestrada.crochetcreations.entities.Product;
-import com.andyestrada.crochetcreations.search.ProductSearchCriteria;
+import com.andyestrada.crochetcreations.search.ProductSearchCriteriaDto;
 import com.andyestrada.crochetcreations.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,9 +38,9 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ProductSearchDto> searchProducts(@RequestParam(required = false) Map<String, String> queryParams) {
+    public ResponseEntity<ProductSearchResultDto> searchProducts(@RequestParam(required = false) Map<String, String> queryParams) {
         try {
-            ProductSearchCriteria criteria = ProductSearchCriteria.builder().build();
+            ProductSearchCriteriaDto criteria = ProductSearchCriteriaDto.builder().build();
             for (Map.Entry<String, String> entry : queryParams.entrySet()) {
                 if (entry.getKey().equalsIgnoreCase("page")) {
                     criteria.setPage(Long.valueOf(queryParams.get("page")));

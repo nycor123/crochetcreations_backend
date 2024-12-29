@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,6 +47,9 @@ public class Product {
 
     @Column(length = 1000)
     private String description;
+
+    @Column(name = "date_created", nullable = false)
+    private LocalDateTime dateCreated;
 
     public Optional<ProductPrice> getEffectivePrice() {
         if (prices != null && prices.size() > 0) {

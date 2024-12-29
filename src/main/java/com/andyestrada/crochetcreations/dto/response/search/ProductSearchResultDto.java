@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class ProductSearchDto {
+public class ProductSearchResultDto {
 
     private Long numberOfResults;
     private Long pageSize;

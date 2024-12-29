@@ -2,14 +2,14 @@ package com.andyestrada.crochetcreations.services;
 
 import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.dto.ProductImageDto;
-import com.andyestrada.crochetcreations.dto.response.search.ProductSearchDto;
+import com.andyestrada.crochetcreations.dto.response.search.ProductSearchResultDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.entities.ProductImage;
 import com.andyestrada.crochetcreations.repositories.ImageRepository;
 import com.andyestrada.crochetcreations.repositories.ProductImageRepository;
 import com.andyestrada.crochetcreations.repositories.ProductRepository;
-import com.andyestrada.crochetcreations.search.ProductSearchCriteria;
+import com.andyestrada.crochetcreations.search.ProductSearchCriteriaDto;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,6 +44,15 @@ public class ProductServiceTest {
     @BeforeEach
     public void reset() {
         productRepository.deleteAll();
+    }
+
+    @Test
+    public void canCreateNewProduct() {
+        //given
+        //when
+        Product product = this.createProduct();
+        //then
+        assertEquals(product.getDateCreated().toLocalDate(), LocalDateTime.now().toLocalDate());
     }
 
     /*
@@ -298,7 +308,7 @@ public class ProductServiceTest {
             createProduct();
         }
         //when
-        ProductSearchCriteria searchCriteria = ProductSearchCriteria.builder()
+        ProductSearchCriteriaDto searchCriteria = ProductSearchCriteriaDto.builder()
                 .name("")
                 .page(0L)
                 .build();
@@ -318,7 +328,7 @@ public class ProductServiceTest {
         //when
         List<Long> productIds = new ArrayList<>();
         for (int i = 0; (i * pageSize) < productCount; i++) {
-            ProductSearchCriteria searchCriteria = ProductSearchCriteria.builder()
+            ProductSearchCriteriaDto searchCriteria = ProductSearchCriteriaDto.builder()
                     .name("")
                     .page(Long.valueOf(i))
                     .pageSize(Long.valueOf(pageSize))
@@ -339,16 +349,16 @@ public class ProductServiceTest {
         for (int i = 0; i < productCount; i++) {
             createProduct();
         }
-        Product product = productService.findWithCriteria(ProductSearchCriteria.builder().name("").build())
+        Product product = productService.findWithCriteria(ProductSearchCriteriaDto.builder().name("").build())
                 .orElseThrow()
                 .getPageData()
                 .get(0);
         productService.updateProduct(product.getId(), ProductDto.builder().name(productName).build());
         //when
-        ProductSearchCriteria productSearchCriteria = ProductSearchCriteria.builder()
+        ProductSearchCriteriaDto productSearchCriteria = ProductSearchCriteriaDto.builder()
                 .name(productName)
                 .build();
-        ProductSearchDto result = productService.findWithCriteria(productSearchCriteria).orElseThrow();
+        ProductSearchResultDto result = productService.findWithCriteria(productSearchCriteria).orElseThrow();
         //then
         assertEquals(productName, result.getPageData().get(0).getName());
     }

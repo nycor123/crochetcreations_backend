@@ -2,13 +2,13 @@ package com.andyestrada.crochetcreations.services;
 
 import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.dto.ProductImageDto;
-import com.andyestrada.crochetcreations.dto.response.search.ProductSearchDto;
+import com.andyestrada.crochetcreations.dto.response.search.ProductSearchResultDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.entities.ProductImage;
 import com.andyestrada.crochetcreations.entities.ProductPrice;
 import com.andyestrada.crochetcreations.repositories.ProductRepository;
-import com.andyestrada.crochetcreations.search.ProductSearchCriteria;
+import com.andyestrada.crochetcreations.search.ProductSearchCriteriaDto;
 import jakarta.transaction.Transactional;
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
@@ -21,7 +21,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,8 +49,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Optional<ProductSearchDto> findWithCriteria(ProductSearchCriteria criteria) {
-        ProductSearchDto result = ProductSearchDto.builder().pageData(new ArrayList<>()).build();
+    public Optional<ProductSearchResultDto> findWithCriteria(ProductSearchCriteriaDto criteria) {
+        ProductSearchResultDto result = ProductSearchResultDto.builder().pageData(new ArrayList<>()).build();
         Long page = criteria.getPage() != null ? criteria.getPage() : 0;
         Long pageSize = criteria.getPageSize() != null ?
                 (criteria.getPageSize() <= Integer.valueOf(maxPageSize).longValue()) ? criteria.getPageSize() : maxPageSize
@@ -99,6 +101,7 @@ public class ProductServiceImpl implements ProductService {
                     .name(productDto.getName())
                     .description(productDto.getDescription())
                     .listedForSale(productDto.getListedForSale() != null ? productDto.getListedForSale() : false)
+                    .dateCreated(LocalDateTime.now())
                     .build();
             updatePrice(product, productDto.getPrice());
             updateImages(product, productDto.getImages());

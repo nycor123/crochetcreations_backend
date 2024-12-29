@@ -6,7 +6,7 @@ import org.springframework.data.domain.Sort;
 
 @Data
 @Builder
-public class ProductSearchCriteria {
+public class ProductSearchCriteriaDto {
 
     private Long page;
     private Long pageSize;
