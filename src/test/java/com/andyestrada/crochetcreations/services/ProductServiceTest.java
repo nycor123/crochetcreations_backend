@@ -26,24 +26,28 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 public class ProductServiceTest {
 
-    @Autowired
-    private ProductService productService;
+    private final ProductService _productService;
+    private final ProductRepository _productRepository;
+    private final ImageRepository _imageRepository;
+    private final ProductImageRepository _productImageRepository;
+    private final String _maxPageSize;
 
     @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private ImageRepository imageRepository;
-
-    @Autowired
-    private ProductImageRepository productImageRepository;
-
-    @Value("${products.search.max_page_size}")
-    private String maxPageSize;
+    public ProductServiceTest(ProductService productService,
+                              ProductRepository productRepository,
+                              ImageRepository imageRepository,
+                              ProductImageRepository productImageRepository,
+                              @Value("${products.search.max_page_size}") String maxPageSize) {
+        _productService = productService;
+        _productRepository = productRepository;
+        _imageRepository = imageRepository;
+        _productImageRepository = productImageRepository;
+        _maxPageSize = maxPageSize;
+    }
 
     @BeforeEach
     public void reset() {
-        productRepository.deleteAll();
+        _productRepository.deleteAll();
     }
 
     @Test
@@ -71,7 +75,7 @@ public class ProductServiceTest {
         List<ProductDto> productDtoList = new ArrayList<>();
         productDtoList.add(productDto);
         //when
-        List<Product> products = productService.saveAll(productDtoList).get();
+        List<Product> products = _productService.saveAll(productDtoList).get();
         //then
         Product product = products.get(0);
         assertTrue(product.getListedForSale());
@@ -93,7 +97,7 @@ public class ProductServiceTest {
         productDtoList.add(productDto);
         String expectedMessage = "Product cannot be listed for sale without a price.";
         //when
-        Exception exception = Assertions.assertThrows(Exception.class, () -> productService.saveAll(productDtoList));
+        Exception exception = Assertions.assertThrows(Exception.class, () -> _productService.saveAll(productDtoList));
         //then
         String actualMessage = exception.getMessage();
         assertEquals(expectedMessage, actualMessage);
@@ -111,7 +115,7 @@ public class ProductServiceTest {
         productDtoList.add(productDto);
         String expectedMessage = "Product price amount should be greater than zero (0.00).";
         //when
-        Exception exception = Assertions.assertThrows(Exception.class, () -> productService.saveAll(productDtoList));
+        Exception exception = Assertions.assertThrows(Exception.class, () -> _productService.saveAll(productDtoList));
         //then
         String actualMessage = exception.getMessage();
         assertEquals(expectedMessage, actualMessage);
@@ -126,12 +130,12 @@ public class ProductServiceTest {
                 .build();
         List<ProductDto> productDtoList = new ArrayList<>();
         productDtoList.add(productDto);
-        Long id = productService.saveAll(productDtoList).get().get(0).getId();
+        Long id = _productService.saveAll(productDtoList).get().get(0).getId();
         //when
         ProductDto updateProductDto = ProductDto.builder().listedForSale(true).build();
-        productService.updateProduct(id, updateProductDto);
+        _productService.updateProduct(id, updateProductDto);
         //then
-        Product product = productService.findById(id).get();
+        Product product = _productService.findById(id).get();
         assertTrue(product.getListedForSale());
     }
 
@@ -141,13 +145,13 @@ public class ProductServiceTest {
         ProductDto productDto = ProductDto.builder().name("Test_Product").build();
         List<ProductDto> productDtoList = new ArrayList<>();
         productDtoList.add(productDto);
-        Long id = productService.saveAll(productDtoList).get().get(0).getId();
+        Long id = _productService.saveAll(productDtoList).get().get(0).getId();
         BigDecimal newPriceAmount = new BigDecimal("100.00");
         //when
         ProductDto updateProductDto = ProductDto.builder().price(newPriceAmount).build();
-        productService.updateProduct(id, updateProductDto);
+        _productService.updateProduct(id, updateProductDto);
         //then
-        Product product = productService.findById(id).get();
+        Product product = _productService.findById(id).get();
         assertEquals(newPriceAmount, product.getEffectivePrice().get().getAmount());
     }
 
@@ -159,12 +163,12 @@ public class ProductServiceTest {
                 .build();
         List<ProductDto> productDtoList = new ArrayList<>();
         productDtoList.add(productDto);
-        Long id = productService.saveAll(productDtoList).get().get(0).getId();
+        Long id = _productService.saveAll(productDtoList).get().get(0).getId();
         String expectedMessage = "Product cannot be listed for sale without a price.";
         //when
         ProductDto updateProductDto = ProductDto.builder().listedForSale(true).build();
         Exception exception = Assertions.assertThrows(Exception.class,
-                () -> productService.updateProduct(id, updateProductDto));
+                () -> _productService.updateProduct(id, updateProductDto));
         //then
         String actualMessage = exception.getMessage();
         assertEquals(expectedMessage, actualMessage);
@@ -178,12 +182,12 @@ public class ProductServiceTest {
                 .build();
         List<ProductDto> productDtoList = new ArrayList<>();
         productDtoList.add(productDto);
-        Long id = productService.saveAll(productDtoList).get().get(0).getId();
+        Long id = _productService.saveAll(productDtoList).get().get(0).getId();
         String expectedMessage = "Product price amount should be greater than zero (0.00).";
         //when
         ProductDto updateProductDto = ProductDto.builder().price(new BigDecimal("0.00")).build();
         Exception exception = Assertions.assertThrows(Exception.class,
-                () -> productService.updateProduct(id, updateProductDto));
+                () -> _productService.updateProduct(id, updateProductDto));
         //then
         String actualMessage = exception.getMessage();
         assertEquals(expectedMessage, actualMessage);
@@ -200,9 +204,9 @@ public class ProductServiceTest {
                 .priority(1)
                 .build();
         ProductDto updateProductDto = ProductDto.builder().images(Collections.singletonList(productImageDto)).build();
-        productService.updateProduct(product.getId(), updateProductDto);
+        _productService.updateProduct(product.getId(), updateProductDto);
         //then
-        product = productService.findById(product.getId()).orElseThrow();
+        product = _productService.findById(product.getId()).orElseThrow();
         assertNotNull(product.getImages());
         List<String> productImageUrls = product.getImages().stream().map(img -> img.getUrl()).toList();
         assertTrue(productImageUrls.contains(image.getUrl()));
@@ -225,7 +229,7 @@ public class ProductServiceTest {
             productImageDtos.add(productImageDto);
         }
         ProductDto updateProductDto = ProductDto.builder().images(productImageDtos).build();
-        Product product = productService.updateProduct(createProduct().getId(), updateProductDto).orElseThrow();
+        Product product = _productService.updateProduct(createProduct().getId(), updateProductDto).orElseThrow();
         //when
         ProductImage productImage = product.getImages().get(0);
         ProductImageDto productImageDto = ProductImageDto.builder()
@@ -235,9 +239,9 @@ public class ProductServiceTest {
         ProductDto removeImageProductDto = ProductDto.builder()
                 .images(Collections.singletonList(productImageDto))
                 .build();
-        productService.updateProduct(product.getId(), removeImageProductDto);
+        _productService.updateProduct(product.getId(), removeImageProductDto);
         //then
-        Product productWithUpdatedImages = productService.findById(product.getId()).orElseThrow();
+        Product productWithUpdatedImages = _productService.findById(product.getId()).orElseThrow();
         assertEquals(1, productWithUpdatedImages.getImages().size());
     }
 
@@ -258,7 +262,7 @@ public class ProductServiceTest {
             productImageDtos.add(productImageDto);
         }
         ProductDto productDto = ProductDto.builder().images(productImageDtos).build();
-        Product product = productService.updateProduct(createProduct().getId(), productDto).orElseThrow();
+        Product product = _productService.updateProduct(createProduct().getId(), productDto).orElseThrow();
         //when
         List<ProductImage> productImages = product.getImages();
         List<ProductImageDto> updateProductImageDtos = new ArrayList<>();
@@ -269,7 +273,7 @@ public class ProductServiceTest {
                     .build();
             updateProductImageDtos.add(productImageDto);
         }
-        Product productWithUpdatedImages = productService.updateProduct(product.getId(),
+        Product productWithUpdatedImages = _productService.updateProduct(product.getId(),
                 ProductDto.builder().images(updateProductImageDtos).build()).orElseThrow();
         List<Integer> imagePriorities = productWithUpdatedImages.getImages().stream().map(img -> img.getPriority()).toList();
         assertEquals(imagePriorities.size(), productImages.size());
@@ -287,16 +291,16 @@ public class ProductServiceTest {
                 .priority(1)
                 .build();
         ProductDto addImageProductDto = ProductDto.builder().images(Collections.singletonList(productImageDto)).build();
-        productService.updateProduct(product.getId(), addImageProductDto);
-        List<Long> productImageIds = productService.findById(product.getId()).orElseThrow().getImages()
+        _productService.updateProduct(product.getId(), addImageProductDto);
+        List<Long> productImageIds = _productService.findById(product.getId()).orElseThrow().getImages()
                 .stream().map(pi -> pi.getId()).toList();
         //when
         ProductDto removeImageProductDto = ProductDto.builder().images(new ArrayList<>()).build();
-        productService.updateProduct(product.getId(), removeImageProductDto);
+        _productService.updateProduct(product.getId(), removeImageProductDto);
         //then
-        Optional<Image> imageOptional = imageRepository.findById(image.getId());
+        Optional<Image> imageOptional = _imageRepository.findById(image.getId());
         assertTrue(imageOptional.isEmpty());
-        Optional<ProductImage> productImageOptional = productImageRepository.findById(productImageIds.get(0));
+        Optional<ProductImage> productImageOptional = _productImageRepository.findById(productImageIds.get(0));
         assertTrue(productImageOptional.isEmpty());
     }
 
@@ -312,9 +316,9 @@ public class ProductServiceTest {
                 .name("")
                 .page(0L)
                 .build();
-        Long findAllProductCount = productService.findWithCriteria(searchCriteria).orElseThrow().getPageSize();
+        Long findAllProductCount = _productService.findWithCriteria(searchCriteria).orElseThrow().getPageSize();
         //then
-        assertEquals(Long.valueOf(maxPageSize), findAllProductCount);
+        assertEquals(Long.valueOf(_maxPageSize), findAllProductCount);
     }
 
     @Test
@@ -333,7 +337,7 @@ public class ProductServiceTest {
                     .page(Long.valueOf(i))
                     .pageSize(Long.valueOf(pageSize))
                     .build();
-            List<Product> pagedResults = productService.findWithCriteria(searchCriteria).orElseThrow().getPageData();
+            List<Product> pagedResults = _productService.findWithCriteria(searchCriteria).orElseThrow().getPageData();
             productIds.addAll(pagedResults.stream().map(Product::getId).toList());
         }
         Set<Long> productIdsSet = new HashSet<>(productIds);
@@ -349,16 +353,16 @@ public class ProductServiceTest {
         for (int i = 0; i < productCount; i++) {
             createProduct();
         }
-        Product product = productService.findWithCriteria(ProductSearchCriteriaDto.builder().name("").build())
+        Product product = _productService.findWithCriteria(ProductSearchCriteriaDto.builder().name("").build())
                 .orElseThrow()
                 .getPageData()
                 .get(0);
-        productService.updateProduct(product.getId(), ProductDto.builder().name(productName).build());
+        _productService.updateProduct(product.getId(), ProductDto.builder().name(productName).build());
         //when
         ProductSearchCriteriaDto productSearchCriteria = ProductSearchCriteriaDto.builder()
                 .name(productName)
                 .build();
-        ProductSearchResultDto result = productService.findWithCriteria(productSearchCriteria).orElseThrow();
+        ProductSearchResultDto result = _productService.findWithCriteria(productSearchCriteria).orElseThrow();
         //then
         assertEquals(productName, result.getPageData().get(0).getName());
     }
@@ -372,7 +376,7 @@ public class ProductServiceTest {
                 .build();
         List<ProductDto> productDtoList = new ArrayList<>();
         productDtoList.add(productDto);
-        return productService.saveAll(productDtoList).get().get(0);
+        return _productService.saveAll(productDtoList).get().get(0);
     }
 
     private Image createImage() {
@@ -380,6 +384,6 @@ public class ProductServiceTest {
                 .remotePublicId("public_id")
                 .url("test_url")
                 .build();
-        return imageRepository.save(image);
+        return _imageRepository.save(image);
     }
 }

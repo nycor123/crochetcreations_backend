@@ -4,7 +4,11 @@ import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.dto.response.search.ProductSearchResultDto;
 import com.andyestrada.crochetcreations.entities.Product;
 import com.andyestrada.crochetcreations.search.ProductSearchCriteriaDto;
+import com.andyestrada.crochetcreations.services.CustomUserDetailsService;
 import com.andyestrada.crochetcreations.services.ProductService;
+import com.andyestrada.crochetcreations.services.authentication.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
@@ -21,25 +25,53 @@ import java.util.*;
 @RequestMapping("/api/v1/products")
 public class ProductController {
 
+    private final JwtService jwtService;
+    private final CustomUserDetailsService userDetailsService;
     private final ProductService productService;
+
     private final int maxPageSize;
 
+    private final Logger _logger = LoggerFactory.getLogger(ProductController.class);
+
     @Autowired
-    public ProductController(ProductService productService,
+    public ProductController(JwtService jwtService,
+                             CustomUserDetailsService userDetailsService,
+                             ProductService productService,
                              @Value("${products.search.max_page_size}") int maxPageSize) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
         this.productService = productService;
         this.maxPageSize = maxPageSize;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable long id) {
+    public ResponseEntity<Product> getProductById(@Nullable @CookieValue("accessToken") String accessToken,
+                                                  @PathVariable long id) {
         Optional<Product> productOptional = productService.findById(id);
+        try {
+            boolean hasAccesstoken = accessToken != null && !accessToken.isEmpty();
+            boolean productListedForSale = productOptional.orElseThrow().getListedForSale();
+            if (!hasAccesstoken && !productListedForSale) {
+                return ResponseEntity.notFound().build();
+            }
+            if (hasAccesstoken && !productListedForSale) {
+                String username = jwtService.extractUsername(accessToken);
+                if (!userDetailsService.isAdmin(username)) {
+                    return ResponseEntity.notFound().build();
+                }
+            }
+        } catch (Exception e) {
+            _logger.error("There was an error while trying to fetch product information.", e);
+            return ResponseEntity.of(Optional.empty());
+        }
         return productOptional.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ProductSearchResultDto> searchProducts(@RequestParam(required = false) Map<String, String> queryParams) {
+    public ResponseEntity<ProductSearchResultDto> searchProducts(@Nullable @CookieValue("accessToken") String accessToken,
+                                                                 @RequestParam(required = false) Map<String, String> queryParams) {
         try {
+            // Build the product search criteria.
             ProductSearchCriteriaDto criteria = ProductSearchCriteriaDto.builder().build();
             for (Map.Entry<String, String> entry : queryParams.entrySet()) {
                 if (entry.getKey().equalsIgnoreCase("page")) {
@@ -60,6 +92,18 @@ public class ProductController {
                     criteria.setSortDirection(sortDirection);
                 }
             }
+            // Non-admin users should only see products that are listed for sale.
+            boolean hasAccesstoken = accessToken != null && !accessToken.isEmpty();
+            if (!hasAccesstoken) {
+                criteria.setListedForSale(true);
+            }
+            if (hasAccesstoken) {
+                String username = jwtService.extractUsername(accessToken);
+                if (!userDetailsService.isAdmin(username)) {
+                    criteria.setListedForSale(true);
+                }
+            }
+            // Return search result.
             return productService.findWithCriteria(criteria).map(ResponseEntity::ok).orElseThrow();
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);

@@ -11,6 +11,7 @@ public class ProductSearchCriteriaDto {
     private Long page;
     private Long pageSize;
     private String name;
+    private Boolean listedForSale;
     private String sortBy;
     private Sort.Direction sortDirection;
 
