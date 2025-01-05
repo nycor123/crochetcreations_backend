@@ -9,6 +9,7 @@ import com.andyestrada.crochetcreations.entities.ProductImage;
 import com.andyestrada.crochetcreations.entities.ProductPrice;
 import com.andyestrada.crochetcreations.repositories.ProductRepository;
 import com.andyestrada.crochetcreations.search.ProductSearchCriteriaDto;
+import com.andyestrada.crochetcreations.specifications.ProductSpecifications;
 import jakarta.transaction.Transactional;
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
@@ -18,12 +19,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,10 +51,13 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Optional<ProductSearchResultDto> findWithCriteria(ProductSearchCriteriaDto criteria) {
         ProductSearchResultDto result = ProductSearchResultDto.builder().pageData(new ArrayList<>()).build();
+
         Long page = criteria.getPage() != null ? criteria.getPage() : 0;
+
         Long pageSize = criteria.getPageSize() != null ?
                 (criteria.getPageSize() <= Integer.valueOf(maxPageSize).longValue()) ? criteria.getPageSize() : maxPageSize
                 : maxPageSize;
+
         Sort.Direction direction = criteria.getSortDirection() != null ? criteria.getSortDirection() : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page.intValue(), pageSize.intValue(), Sort.by(direction, "id"));
 
@@ -62,9 +65,18 @@ public class ProductServiceImpl implements ProductService {
             pageable = PageRequest.of(page.intValue(), pageSize.intValue(), Sort.by(direction, criteria.getSortBy()));
         }
 
-        if (criteria.getName() != null) {
-            List<Product> products = productRepository.findByNameContaining(criteria.getName(), pageable).get().toList();
-            result.setNumberOfResults(productRepository.findByNameContainingCount(criteria.getName()));
+        if (criteria.getName() != null && criteria.getListedForSale() != null) {
+            Specification<Product> nameContains = ProductSpecifications.nameContains(criteria.getName());
+            Specification<Product> listedForSaleEq = ProductSpecifications.listedForSaleEq(criteria.getListedForSale());
+            Specification<Product> spec = Specification.where(nameContains).and(listedForSaleEq);
+            List<Product> products = productRepository.findAll(spec, pageable).get().toList();
+            result.setNumberOfResults(productRepository.count(spec));
+            result.getPageData().addAll(products);
+        } else if (criteria.getName() != null) {
+            Specification<Product> nameContains = ProductSpecifications.nameContains(criteria.getName());
+            Specification<Product> spec = Specification.where(nameContains);
+            List<Product> products = productRepository.findAll(spec, pageable).get().toList();
+            result.setNumberOfResults(productRepository.count(spec));
             result.getPageData().addAll(products);
         }
 

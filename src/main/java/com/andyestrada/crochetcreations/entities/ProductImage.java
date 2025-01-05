@@ -19,7 +19,7 @@ public class ProductImage extends Image {
         this.setUrl(image.getUrl());
     }
 
-    @JsonBackReference
+    @JsonBackReference(value = "product-images")
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;

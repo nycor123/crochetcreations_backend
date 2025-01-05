@@ -5,8 +5,12 @@ import com.andyestrada.crochetcreations.dto.ProductDto;
 import com.andyestrada.crochetcreations.dto.ProductImageDto;
 import com.andyestrada.crochetcreations.dto.request.ImageDto;
 import com.andyestrada.crochetcreations.dto.request.SignInRequestDto;
+import com.andyestrada.crochetcreations.dto.response.search.ProductSearchResultDto;
 import com.andyestrada.crochetcreations.entities.Image;
 import com.andyestrada.crochetcreations.entities.Product;
+import com.andyestrada.crochetcreations.entities.Role;
+import com.andyestrada.crochetcreations.entities.User;
+import com.andyestrada.crochetcreations.repositories.UserRepository;
 import com.andyestrada.crochetcreations.services.ImageService;
 import com.andyestrada.crochetcreations.services.ProductService;
 import com.andyestrada.crochetcreations.services.authentication.AuthenticationService;
@@ -19,22 +23,21 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -44,7 +47,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         classes = CrochetCreationsApplication.class)
 @AutoConfigureMockMvc(addFilters = false)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ActiveProfiles("test")
 public class ProductControllerTest {
 
     private final MockMvc _mockMvc;
@@ -52,8 +54,14 @@ public class ProductControllerTest {
     private final ProductService _productService;
     private final ImageService _imageService;
     private final AuthenticationService _authenticationService;
-    private final String _adminEmail;
-    private final String _adminPassword;
+    private final UserRepository _userRepository;
+    private final PasswordEncoder _passwordEncoder;
+
+    private final String _adminEmail = "admin@email.com";
+    private final String _adminPassword = "12345";
+
+    private final String _userEmail = "test_user@email.com";
+    private final String _userPassword = "12345";
 
     private List<Product> _savedProducts;
     private List<Long> _imageIds = new ArrayList<>();
@@ -64,19 +72,38 @@ public class ProductControllerTest {
                                  ProductService productService,
                                  ImageService imageService,
                                  AuthenticationService authenticationService,
-                                 @Value("${admin.email}") String adminEmail,
-                                 @Value("${admin.password}") String adminPassword) {
+                                 UserRepository userRepository,
+                                 PasswordEncoder passwordEncoder) {
         _mockMvc = mockMvc;
         _mapper = objectMapper;
         _productService = productService;
         _imageService = imageService;
         _authenticationService = authenticationService;
-        _adminEmail = adminEmail;
-        _adminPassword = adminPassword;
+        _userRepository = userRepository;
+        _passwordEncoder = passwordEncoder;
     }
 
     @BeforeAll
     public void setup() {
+        // Create admin user
+        User admin = User.builder()
+                .firstName("Admin")
+                .lastName("User")
+                .email(_adminEmail)
+                .password(_passwordEncoder.encode(_adminPassword))
+                .role(Role.ADMIN)
+                .build();
+        _userRepository.save(admin);
+        // Create non-admin user
+        User user = User.builder()
+                .firstName("Test")
+                .lastName("User")
+                .email(_userEmail)
+                .password(_passwordEncoder.encode(_userPassword))
+                .role(Role.USER)
+                .build();
+        _userRepository.save(user);
+        // Create products
         List<ProductDto> productDtoList = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             ProductDto productDto = ProductDto.builder()
@@ -209,13 +236,11 @@ public class ProductControllerTest {
     public void nonAdminCannotFetchUnlistedProductById() throws Exception {
         //given
         List<ProductDto> productDtoList = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            ProductDto productDto = ProductDto.builder()
-                    .name("Product_" + i)
-                    .description("test description")
-                    .build();
-            productDtoList.add(productDto);
-        }
+        ProductDto productDto = ProductDto.builder()
+                .name("Test_Product")
+                .description("test description")
+                .build();
+        productDtoList.add(productDto);
         Product unlistedProduct = _productService.saveAll(productDtoList).orElseThrow().get(0);
         //when
         ResultActions result = _mockMvc.perform(get("/api/v1/products/" + unlistedProduct.getId()));
@@ -227,13 +252,11 @@ public class ProductControllerTest {
     public void adminCanFetchUnlistedProductById() throws Exception {
         //given
         List<ProductDto> productDtoList = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            ProductDto productDto = ProductDto.builder()
-                    .name("Product_" + i)
-                    .description("test description")
-                    .build();
-            productDtoList.add(productDto);
-        }
+        ProductDto productDto = ProductDto.builder()
+                .name("Test Product")
+                .description("test description")
+                .build();
+        productDtoList.add(productDto);
         Product unlistedProduct = _productService.saveAll(productDtoList).orElseThrow().get(0);
         SignInRequestDto signInRequestDto = SignInRequestDto.builder()
                 .email(_adminEmail)
@@ -245,6 +268,60 @@ public class ProductControllerTest {
                 .cookie(new Cookie("accessToken", accessToken)));
         //then
         result.andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    public void nonAdminCannotSearchUnlistedProducts() throws Exception {
+        //given
+        List<ProductDto> productDtoList = new ArrayList<>();
+        ProductDto productDto = ProductDto.builder()
+                .name("Test Product")
+                .description("test description")
+                .build();
+        productDtoList.add(productDto);
+        _productService.saveAll(productDtoList);
+        SignInRequestDto signInRequestDto = SignInRequestDto.builder()
+                .email(_userEmail)
+                .password(_userPassword)
+                .build();
+        String accessToken = _authenticationService.signin(signInRequestDto).getToken();
+        //when
+        ResultActions result = _mockMvc.perform(get("/api/v1/products/search")
+                .cookie(new Cookie("accessToken", accessToken))
+                .queryParam("name", "")
+                .accept(MediaType.APPLICATION_JSON));
+        String responseJson = result.andReturn().getResponse().getContentAsString();
+        ProductSearchResultDto responseObj = _mapper.readValue(responseJson, ProductSearchResultDto.class);
+        //then
+        boolean hasUnlistedProduct = responseObj.getPageData().stream().anyMatch(product -> !product.getListedForSale());
+        assertFalse(hasUnlistedProduct);
+    }
+
+    @Test
+    public void adminCanSearchUnlistedProducts() throws Exception {
+        //given
+        List<ProductDto> productDtoList = new ArrayList<>();
+        ProductDto productDto = ProductDto.builder()
+                .name("Test Product")
+                .description("test description")
+                .build();
+        productDtoList.add(productDto);
+        _productService.saveAll(productDtoList);
+        SignInRequestDto signInRequestDto = SignInRequestDto.builder()
+                .email(_adminEmail)
+                .password(_adminPassword)
+                .build();
+        String accessToken = _authenticationService.signin(signInRequestDto).getToken();
+        //when
+        ResultActions result = _mockMvc.perform(get("/api/v1/products/search")
+                .cookie(new Cookie("accessToken", accessToken))
+                .queryParam("name", "")
+                .accept(MediaType.APPLICATION_JSON));
+        String responseJson = result.andReturn().getResponse().getContentAsString();
+        ProductSearchResultDto responseObj = _mapper.readValue(responseJson, ProductSearchResultDto.class);
+        //then
+        boolean hasUnlistedProduct = responseObj.getPageData().stream().anyMatch(product -> !product.getListedForSale());
+        assertTrue(hasUnlistedProduct);
     }
 
 }

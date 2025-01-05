@@ -24,7 +24,7 @@ public class ProductPrice {
     @Column(name = "as_of_date")
     private LocalDateTime asOfDate;
 
-    @JsonBackReference
+    @JsonBackReference(value = "product-prices")
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;

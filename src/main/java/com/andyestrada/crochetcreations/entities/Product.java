@@ -25,22 +25,22 @@ public class Product {
     @Column(name = "listed_for_sale", nullable = false)
     private Boolean listedForSale;
 
-    @JsonManagedReference
+    @JsonManagedReference(value = "product-prices")
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<ProductPrice> prices;
 
-    @JsonManagedReference
+    @JsonManagedReference(value = "product-images")
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<ProductImage> images;
 
-    @JsonManagedReference
+    @JsonManagedReference(value = "product-stock")
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<Item> stock;
 
-    @JsonManagedReference
+    @JsonManagedReference(value = "product-cart-items")
     @OneToMany(mappedBy = "product")
     @ToString.Exclude
     private List<CartItem> cartItems;

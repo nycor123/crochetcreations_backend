@@ -25,7 +25,7 @@ public class CartItem {
     @NotNull
     private Cart cart;
 
-    @JsonBackReference
+    @JsonBackReference(value = "product-cart-items")
     @ManyToOne
     @JoinColumn(name = "product_id")
     @NotNull

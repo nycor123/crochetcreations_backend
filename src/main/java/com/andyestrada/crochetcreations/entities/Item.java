@@ -18,7 +18,7 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JsonBackReference
+    @JsonBackReference(value = "product-stock")
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
